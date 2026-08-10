@@ -1,0 +1,11 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="用户协议"
+      section="3.6.9"
+      :points="[
+        '协议富文本展示',
+      ]"
+    />
+  </YjPage>
+</template>

@@ -1,0 +1,12 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="分销钱包"
+      section="3.6.7"
+      :points="[
+        '分销余额与待入账金额',
+        '提现申请',
+      ]"
+    />
+  </YjPage>
+</template>

@@ -1,0 +1,12 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="商户信息"
+      section="3.6.7"
+      :points="[
+        '联系人姓名、联系方式',
+        '银行账户信息编辑',
+      ]"
+    />
+  </YjPage>
+</template>

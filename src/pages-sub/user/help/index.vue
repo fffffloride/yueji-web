@@ -1,0 +1,13 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="帮助与客服"
+      section="3.9"
+      :points="[
+        '常见问题',
+        '在线客服（微信官方客服插件）',
+        '跳转企业微信添加顾问',
+      ]"
+    />
+  </YjPage>
+</template>

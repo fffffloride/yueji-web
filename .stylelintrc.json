@@ -1,0 +1,28 @@
+{
+  "extends": ["stylelint-config-standard-scss", "stylelint-config-recess-order"],
+  "overrides": [
+    {
+      "files": ["**/*.vue"],
+      "customSyntax": "postcss-html"
+    }
+  ],
+  "rules": {
+    "unit-no-unknown": [true, { "ignoreUnits": ["rpx"] }],
+    "selector-type-no-unknown": [
+      true,
+      {
+        "ignoreTypes": ["page", "view", "text", "image", "button", "scroll-view", "swiper"]
+      }
+    ],
+    "selector-class-pattern": [
+      "^[a-z][a-z0-9]*(-[a-z0-9]+)*(__[a-z0-9]+(-[a-z0-9]+)*)?(--[a-z0-9]+(-[a-z0-9]+)*)?$",
+      {
+        "message": "类名需符合 BEM 规范：block__element--modifier"
+      }
+    ],
+    "scss/at-rule-no-unknown": null,
+    "no-descending-specificity": null,
+    "custom-property-pattern": null
+  },
+  "ignoreFiles": ["dist/**/*", "node_modules/**/*"]
+}

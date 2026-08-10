@@ -1,0 +1,12 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="个人资料"
+      section="3.6.9"
+      :points="[
+        '头像、昵称、真实姓名编辑',
+        '性别、生日',
+      ]"
+    />
+  </YjPage>
+</template>

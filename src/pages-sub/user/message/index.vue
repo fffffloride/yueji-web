@@ -1,0 +1,12 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="消息中心"
+      section="3.6.8"
+      :points="[
+        '活动消息、客服消息、系统通知',
+        '未读标记',
+      ]"
+    />
+  </YjPage>
+</template>

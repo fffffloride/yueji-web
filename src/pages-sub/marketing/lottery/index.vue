@@ -1,0 +1,14 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="幸运大转盘"
+      section="3.7.2"
+      :points="[
+        '转盘奖品扇形分布',
+        '每次抽奖消耗积分（后台配置）',
+        '抽奖动画与中奖弹窗',
+        '我的奖品记录与领取',
+      ]"
+    />
+  </YjPage>
+</template>

@@ -1,0 +1,14 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="医生详情"
+      section="3.8.2"
+      :points="[
+        '医生简介与擅长领域',
+        '执业资质展示',
+        '用户评价',
+        '可预约项目列表',
+      ]"
+    />
+  </YjPage>
+</template>

@@ -1,0 +1,13 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="订单详情"
+      section="4.4.2"
+      :points="[
+        '订单基本信息与商品信息',
+        '支付信息与优惠明细',
+        '核销状态、核销时间、核销人',
+      ]"
+    />
+  </YjPage>
+</template>

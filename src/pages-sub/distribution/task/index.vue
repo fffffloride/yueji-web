@@ -1,0 +1,13 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="销售任务"
+      section="3.6.7"
+      :points="[
+        '上级发布的销售任务',
+        '任务要求与奖励说明',
+        '任务完成进度',
+      ]"
+    />
+  </YjPage>
+</template>

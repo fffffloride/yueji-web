@@ -1,0 +1,13 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="团队管理"
+      section="3.6.7"
+      :points="[
+        '团队成员列表',
+        '直接推荐的下级代理商',
+        '团队整体情况概览',
+      ]"
+    />
+  </YjPage>
+</template>

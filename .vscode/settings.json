@@ -1,0 +1,16 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.fixAll.stylelint": "explicit"
+  },
+  "eslint.useFlatConfig": true,
+  "stylelint.validate": ["css", "scss", "vue"],
+  "css.validate": false,
+  "scss.validate": false,
+  "files.associations": {
+    "pages.json": "jsonc",
+    "manifest.json": "jsonc"
+  }
+}

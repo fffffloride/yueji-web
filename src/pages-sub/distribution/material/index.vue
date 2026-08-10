@@ -1,0 +1,13 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="素材中心"
+      section="3.6.7"
+      :points="[
+        '素材分类：海报、九宫格、视频',
+        '一键转发朋友圈',
+        '海报生成带用户头像昵称',
+      ]"
+    />
+  </YjPage>
+</template>

@@ -1,0 +1,12 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="优惠兑换码"
+      section="3.7.4"
+      :points="[
+        '输入兑换码领取优惠券',
+        '兑换结果提示',
+      ]"
+    />
+  </YjPage>
+</template>

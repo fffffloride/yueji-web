@@ -1,0 +1,13 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="会员中心"
+      section="3.6.5"
+      :points="[
+        '当前等级与下一等级进度条',
+        '等级权益说明',
+        '消费累计金额',
+      ]"
+    />
+  </YjPage>
+</template>

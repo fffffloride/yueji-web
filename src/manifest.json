@@ -1,0 +1,35 @@
+{
+    "name" : "悦己DLumière",
+    "appid" : "",
+    "description" : "悦己DLumière 医美服务微信小程序",
+    "versionName" : "1.0.0",
+    "versionCode" : "100",
+    "transformPx" : false,
+    /* 微信小程序特有相关 */
+    "mp-weixin" : {
+        /* 微信小程序 AppID，发布与真机预览前需填入 */
+        "appid" : "",
+        "setting" : {
+            "urlCheck" : false,
+            "minified" : true,
+            "postcss" : true
+        },
+        "usingComponents" : true,
+        /* 按需注入组件，页面较多时可明显降低启动耗时 */
+        "lazyCodeLoading" : "requiredComponents",
+        "optimization" : {
+            "subPackages" : true
+        },
+        "permission" : {},
+        "darkmode" : false
+    },
+    "h5" : {
+        "router" : {
+            "base" : "./"
+        }
+    },
+    "uniStatistics" : {
+        "enable" : false
+    },
+    "vueVersion" : "3"
+}

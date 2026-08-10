@@ -1,0 +1,13 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="拼团活动"
+      section="3.7.1"
+      :points="[
+        '拼团商品列表',
+        '拼团价与原价对比、人数要求',
+        '拼团倒计时',
+      ]"
+    />
+  </YjPage>
+</template>

@@ -1,0 +1,11 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="公告详情"
+      section="3.2.4"
+      :points="[
+        '公告正文展示',
+      ]"
+    />
+  </YjPage>
+</template>

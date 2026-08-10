@@ -1,0 +1,45 @@
+// 设计规范 token，对应需求文档 2.2 色彩体系 / 2.3 字体规范 / 2.4 布局规范。
+// 设计稿基于 750 宽，文档中标注的 px 一律落为 rpx。
+// 本文件通过 uni.scss 注入到每个组件，因此只能声明 SCSS 变量，
+// 不能包含任何会产出 CSS 的规则，否则会在每个组件里重复输出。
+// 对应的 CSS 自定义属性统一在 styles/common.scss 中声明。
+
+$color-primary: #2d5a3d;
+$color-primary-dark: #1a3a28;
+$color-primary-light: #4a7c59;
+$color-primary-lighter: #6b9b7a;
+$color-bg: #fff;
+$color-bg-page: #f7f8fa;
+$color-text-title: #1a1a1a;
+$color-text-content: #333;
+$color-text-sub: #666;
+$color-text-placeholder: #999;
+$color-text-disabled: #ccc;
+$color-border: #e5e5e5;
+$color-line: #eee;
+$color-success: #52c41a;
+$color-warning: #faad14;
+$color-danger: #ff4d4f;
+$color-price: #ff6b35;
+$font-size-xl: 36rpx; // 大标题
+$font-size-lg: 32rpx; // 一级标题
+$font-size-md: 28rpx; // 二级标题 / 正文
+$font-size-sm: 24rpx; // 辅助文字
+$font-size-xs: 22rpx; // 小字
+
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-md: 24rpx;
+$spacing-lg: 32rpx;
+$page-padding: 30rpx; // 内容区域左右留白
+
+$radius-card: 16rpx;
+$radius-input: 12rpx;
+$radius-button: 24rpx;
+$radius-tag: 20rpx;
+$height-button: 88rpx;
+$height-input: 80rpx;
+$height-tag: 40rpx;
+$height-list-item: 96rpx;
+$height-navbar: 88rpx;
+$height-tabbar: 100rpx; // 含安全区域

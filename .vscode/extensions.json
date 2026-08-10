@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "Vue.volar",
+    "uni-helper.uni-app-schemas-vscode",
+    "uni-helper.uni-highlight-vscode",
+    "uni-helper.uni-app-snippets-vscode",
+    "antfu.unocss",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "stylelint.vscode-stylelint",
+    "editorconfig.editorconfig"
+  ]
+}

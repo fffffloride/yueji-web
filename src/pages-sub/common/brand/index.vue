@@ -1,0 +1,12 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="品牌背书"
+      section="3.2.7"
+      :points="[
+        '品牌起源、合理定价、正品保障、医生团队、安全保障',
+        '后台可编辑图片与富文本',
+      ]"
+    />
+  </YjPage>
+</template>

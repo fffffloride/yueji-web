@@ -1,0 +1,13 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="商品搜索"
+      section="3.3.1"
+      :points="[
+        '搜索历史记录',
+        '热门搜索推荐',
+        '搜索结果排序与筛选',
+      ]"
+    />
+  </YjPage>
+</template>

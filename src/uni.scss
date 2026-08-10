@@ -1,0 +1,6 @@
+/**
+ * uni-app 会把本文件注入到每个 vue 组件的样式中，
+ * 因此这里只放变量与 mixin，不要写会产出实际样式的规则。
+ */
+@use "@/styles/variables.scss" as *;
+@use "@/styles/mixins.scss" as *;

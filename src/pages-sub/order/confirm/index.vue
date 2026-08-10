@@ -1,0 +1,15 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="确认订单"
+      section="3.5.1"
+      :points="[
+        '联系人、手机号、到店时间',
+        '商品清单与金额明细',
+        '优惠券选择与积分抵扣',
+        '用户协议勾选',
+        '提交订单',
+      ]"
+    />
+  </YjPage>
+</template>

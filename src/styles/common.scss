@@ -1,0 +1,115 @@
+@use "./variables.scss" as *;
+@use "./mixins.scss" as *;
+
+// CSS 自定义属性，供页面/组件直接引用，也是运行时换肤的入口。
+// 只在这里声明一次，本文件仅由 App.vue 引入。
+page {
+  --yj-color-primary: #{$color-primary};
+  --yj-color-primary-dark: #{$color-primary-dark};
+  --yj-color-primary-light: #{$color-primary-light};
+  --yj-color-primary-lighter: #{$color-primary-lighter};
+  --yj-color-bg: #{$color-bg};
+  --yj-color-bg-page: #{$color-bg-page};
+  --yj-color-text-title: #{$color-text-title};
+  --yj-color-text-content: #{$color-text-content};
+  --yj-color-text-sub: #{$color-text-sub};
+  --yj-color-text-placeholder: #{$color-text-placeholder};
+  --yj-color-text-disabled: #{$color-text-disabled};
+  --yj-color-border: #{$color-border};
+  --yj-color-line: #{$color-line};
+  --yj-color-success: #{$color-success};
+  --yj-color-warning: #{$color-warning};
+  --yj-color-danger: #{$color-danger};
+  --yj-color-price: #{$color-price};
+  --yj-font-size-xl: #{$font-size-xl};
+  --yj-font-size-lg: #{$font-size-lg};
+  --yj-font-size-md: #{$font-size-md};
+  --yj-font-size-sm: #{$font-size-sm};
+  --yj-font-size-xs: #{$font-size-xs};
+  --yj-page-padding: #{$page-padding};
+  --yj-radius-card: #{$radius-card};
+  --yj-radius-button: #{$radius-button};
+  --yj-radius-input: #{$radius-input};
+  --yj-height-navbar: #{$height-navbar};
+  --yj-height-tabbar: #{$height-tabbar};
+
+  // 覆盖 wot-design-uni 的语义变量，让组件库跟随品牌墨绿主题。
+  // 全局覆盖即可生效，无需在每个页面包 wd-config-provider；
+  // 需要局部换肤或深色模式时再用 settings.ts 里的 themeVars 配合 wd-config-provider。
+  --wot-color-theme: #{$color-primary};
+  --wot-color-success: #{$color-success};
+  --wot-color-warning: #{$color-warning};
+  --wot-color-danger: #{$color-danger};
+  --wot-color-title: #{$color-text-title};
+  --wot-color-content: #{$color-text-content};
+  --wot-color-secondary: #{$color-text-sub};
+  --wot-color-aid: #{$color-text-placeholder};
+  --wot-color-tip: #{$color-text-disabled};
+  --wot-color-border: #{$color-border};
+  --wot-color-border-light: #{$color-line};
+  --wot-color-bg: #{$color-bg-page};
+  --wot-size-side-padding: #{$page-padding};
+
+  min-height: 100%;
+  font-size: $font-size-md;
+  color: $color-text-content;
+  background-color: $color-bg-page;
+}
+
+view,
+text,
+button,
+input,
+textarea,
+image {
+  box-sizing: border-box;
+}
+
+// 页面骨架：所有业务页面共用，避免各页重复写留白与底部安全区
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.page__body {
+  flex: 1;
+  padding: $spacing-md $page-padding;
+}
+
+// 底部有固定操作栏时给内容区留出的占位
+.page__body--with-footer {
+  padding-bottom: calc(#{$height-button} + #{$spacing-lg});
+}
+
+// 配合自定义 TabBar 使用，避免内容被遮挡
+.page__body--with-tabbar {
+  padding-bottom: calc(#{$height-tabbar} + #{$spacing-lg});
+}
+
+.page__footer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  padding: $spacing-sm $page-padding;
+  background-color: $color-bg;
+
+  @include safe-area-bottom;
+}
+
+.card {
+  padding: $spacing-md;
+
+  @include card;
+}
+
+.text-price {
+  font-weight: 500;
+  color: $color-price;
+}
+
+.hairline-bottom {
+  @include hairline(bottom);
+}

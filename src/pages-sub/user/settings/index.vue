@@ -1,0 +1,14 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="设置"
+      section="3.6.9"
+      :points="[
+        '个人资料编辑入口',
+        '账号安全、隐私设置',
+        '关于我们、用户协议',
+        '退出登录',
+      ]"
+    />
+  </YjPage>
+</template>

@@ -1,0 +1,12 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="我的收藏"
+      section="3.6.8"
+      :points="[
+        '收藏商品列表',
+        '取消收藏',
+      ]"
+    />
+  </YjPage>
+</template>

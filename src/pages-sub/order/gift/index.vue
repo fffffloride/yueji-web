@@ -1,0 +1,14 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="订单送礼"
+      section="3.5.4"
+      :points="[
+        '已购订单分享转赠',
+        '分享时不显示金额',
+        '好友点击领取',
+        '转赠记录',
+      ]"
+    />
+  </YjPage>
+</template>

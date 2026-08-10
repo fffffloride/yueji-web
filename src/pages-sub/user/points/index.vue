@@ -1,0 +1,13 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="我的积分"
+      section="3.6.4"
+      :points="[
+        '积分余额与抵现规则说明',
+        '获得记录与使用记录',
+        '积分商城入口',
+      ]"
+    />
+  </YjPage>
+</template>

@@ -1,0 +1,12 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="佣金和收益"
+      section="3.6.7"
+      :points="[
+        '已返佣金、待返佣金、总收益',
+        '收益明细列表',
+      ]"
+    />
+  </YjPage>
+</template>
