@@ -4,10 +4,10 @@ import { appSettings } from "@/settings";
 import { clearAccessToken, getAccessToken } from "./auth";
 import { buildQuery } from "./format";
 
-/** 后端统一返回结构，见需求文档 6.2。 */
+/** 后端统一返回结构：youlai-nest 风格，成功码 "00000"，消息字段为 msg。 */
 export interface ApiResult<T = unknown> {
-  code: number;
-  message: string;
+  code: string;
+  msg: string;
   data: T;
 }
 
@@ -30,8 +30,7 @@ export interface RequestOptions<D = unknown> {
   loading?: boolean | string;
 }
 
-const BUSINESS_CODE_SUCCESS = 200;
-const BUSINESS_CODE_UNAUTHORIZED = 401;
+const BUSINESS_CODE_SUCCESS = "00000";
 
 const baseURL = `${import.meta.env.VITE_API_BASE_URL}${import.meta.env.VITE_API_PREFIX}`;
 const isMockEnabled = import.meta.env.VITE_USE_MOCK === "true";
@@ -105,17 +104,19 @@ export async function request<T = unknown, D = unknown>(
       timeout: appSettings.requestTimeout,
     });
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw new Error(`网络异常（${response.statusCode}）`);
+    // 后端对未登录/token失效返回 HTTP 401
+    if (response.statusCode === 401) {
+      handleUnauthorized();
+      throw new Error("登录已失效，请重新登录");
     }
 
     const result = response.data as ApiResult<T>;
-    if (result.code === BUSINESS_CODE_UNAUTHORIZED) {
-      handleUnauthorized();
-      throw new Error(result.message || "登录已失效，请重新登录");
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw new Error(result?.msg || `网络异常（${response.statusCode}）`);
     }
+
     if (result.code !== BUSINESS_CODE_SUCCESS) {
-      throw new Error(result.message || "请求失败");
+      throw new Error(result.msg || "请求失败");
     }
 
     return result.data;
