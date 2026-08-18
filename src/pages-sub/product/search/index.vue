@@ -51,6 +51,7 @@ const loading = ref(false);
 const finished = ref(false);
 const pageNum = ref(1);
 const PAGE_SIZE = 10;
+let requestSequence = 0;
 
 function saveHistory(word: string): void {
   const list = [word, ...history.value.filter((w) => w !== word)].slice(0, HISTORY_LIMIT);
@@ -64,7 +65,8 @@ function clearHistory(): void {
 }
 
 async function fetchProducts(reset = false): Promise<void> {
-  if (loading.value) return;
+  if (!reset && loading.value) return;
+  const sequence = reset ? ++requestSequence : requestSequence;
   if (reset) {
     pageNum.value = 1;
     finished.value = false;
@@ -73,17 +75,19 @@ async function fetchProducts(reset = false): Promise<void> {
   if (finished.value) return;
 
   loading.value = true;
+  const requestedPage = pageNum.value;
   try {
     const result = await ProductAPI.search({
-      pageNum: pageNum.value,
+      pageNum: requestedPage,
       pageSize: PAGE_SIZE,
       keyword: keyword.value,
     });
+    if (sequence !== requestSequence) return;
     products.value = [...products.value, ...result.list];
     finished.value = products.value.length >= result.total;
-    pageNum.value += 1;
+    pageNum.value = requestedPage + 1;
   } finally {
-    loading.value = false;
+    if (sequence === requestSequence) loading.value = false;
   }
 }
 

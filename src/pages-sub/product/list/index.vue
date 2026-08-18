@@ -14,12 +14,14 @@ const loading = ref(false);
 const finished = ref(false);
 const pageNum = ref(1);
 const PAGE_SIZE = 10;
+let requestSequence = 0;
 
 /** 页面参数：categoryId 按分类过滤、tag 按标签过滤（如首页"热销"入口）、title 自定义标题 */
 const query = reactive<{ categoryId?: string; tag?: string }>({});
 
 async function fetchProducts(reset = false): Promise<void> {
-  if (loading.value) return;
+  if (!reset && loading.value) return;
+  const sequence = reset ? ++requestSequence : requestSequence;
   if (reset) {
     pageNum.value = 1;
     finished.value = false;
@@ -28,18 +30,20 @@ async function fetchProducts(reset = false): Promise<void> {
   if (finished.value) return;
 
   loading.value = true;
+  const requestedPage = pageNum.value;
   try {
     const result = await ProductAPI.getPage({
-      pageNum: pageNum.value,
+      pageNum: requestedPage,
       pageSize: PAGE_SIZE,
       categoryId: query.categoryId,
       ...(query.tag ? { tag: query.tag } : {}),
     } as Parameters<typeof ProductAPI.getPage>[0]);
+    if (sequence !== requestSequence) return;
     products.value = [...products.value, ...result.list];
     finished.value = products.value.length >= result.total;
-    pageNum.value += 1;
+    pageNum.value = requestedPage + 1;
   } finally {
-    loading.value = false;
+    if (sequence === requestSequence) loading.value = false;
   }
 }
 

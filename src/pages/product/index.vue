@@ -105,6 +105,7 @@ const loading = ref(false);
 const finished = ref(false);
 const pageNum = ref(1);
 const PAGE_SIZE = 10;
+let requestSequence = 0;
 
 const subCategories = computed(() => {
   const current = categories.value.find((c) => c.id === activeCategoryId.value);
@@ -120,7 +121,8 @@ async function loadCategories(): Promise<void> {
 }
 
 async function fetchProducts(reset = false): Promise<void> {
-  if (loading.value) return;
+  if (!reset && loading.value) return;
+  const sequence = reset ? ++requestSequence : requestSequence;
   if (reset) {
     pageNum.value = 1;
     finished.value = false;
@@ -129,21 +131,23 @@ async function fetchProducts(reset = false): Promise<void> {
   if (finished.value) return;
 
   loading.value = true;
+  const requestedPage = pageNum.value;
   try {
     const result = await ProductAPI.getPage({
-      pageNum: pageNum.value,
+      pageNum: requestedPage,
       pageSize: PAGE_SIZE,
       categoryId: activeSubCategoryId.value || activeCategoryId.value || undefined,
       sortBy: sortValue.value === "default" ? undefined : sortValue.value,
       order: sortValue.value === "price" ? priceOrder.value : undefined,
     });
+    if (sequence !== requestSequence) return;
     products.value = [...products.value, ...result.list];
     finished.value = products.value.length >= result.total;
-    pageNum.value += 1;
+    pageNum.value = requestedPage + 1;
   } catch {
     // 请求层已 toast
   } finally {
-    loading.value = false;
+    if (sequence === requestSequence) loading.value = false;
   }
 }
 
@@ -173,10 +177,8 @@ function loadMore(): void {
 }
 
 onShow(() => {
-  if (categories.value.length === 0) {
-    loadCategories();
-    fetchProducts(true);
-  }
+  if (categories.value.length === 0) loadCategories();
+  fetchProducts(true);
 });
 </script>
 

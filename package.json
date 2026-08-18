@@ -2,6 +2,7 @@
   "name": "yueji-mp",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@9.15.9",
   "description": "悦己 DLumière 医美微信小程序",
   "scripts": {
     "dev:h5": "uni",

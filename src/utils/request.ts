@@ -14,7 +14,7 @@ export interface ApiResult<T = unknown> {
 export type RequestMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 export interface RequestOptions<D = unknown> {
-  /** 接口路径，不含 baseURL 与版本前缀，如 "/user/info"。 */
+  /** 接口路径，不含 baseURL 与版本前缀，如 "/app/member/profile"。 */
   url: string;
   method?: RequestMethod;
   /** 请求体。 */
@@ -61,9 +61,7 @@ function handleUnauthorized(): void {
  * @param options - 请求配置。
  * @returns 后端 data 字段的内容。
  */
-export async function request<T = unknown, D = unknown>(
-  options: RequestOptions<D>
-): Promise<T> {
+export async function request<T = unknown, D = unknown>(options: RequestOptions<D>): Promise<T> {
   const {
     url,
     method = "GET",

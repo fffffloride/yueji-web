@@ -9,10 +9,24 @@ export interface LoginRequest {
 }
 
 export interface LoginResult {
+  tokenType: string;
   accessToken: string;
+  refreshToken: string;
   /** token 有效期（秒） */
   expiresIn: number;
-  userInfo: UserInfo;
+  hasMobile: boolean;
+}
+
+/** 服务端会员资料。 */
+export interface MemberProfile {
+  id: string;
+  nickname: string;
+  avatar?: string | null;
+  mobile?: string | null;
+  gender: 0 | 1 | 2;
+  points: number;
+  totalSpent: number;
+  levelId?: string | null;
 }
 
 /** 登录用户信息。 */
@@ -22,12 +36,12 @@ export interface UserInfo {
   avatar: string;
   phone: string;
   realName?: string;
-  memberLevel: MemberLevelEnum;
+  memberLevel?: MemberLevelEnum;
   /** 累计消费金额（分） */
   totalConsumption: number;
   points: number;
   /** 是否为代理商，决定分销板块是否可见 */
-  isAgent: boolean;
+  isAgent?: boolean;
 }
 
 /** 个人资料表单。 */
