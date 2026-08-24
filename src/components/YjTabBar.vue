@@ -1,8 +1,8 @@
 <template>
   <wd-tabbar
     :model-value="activeIndex"
-    fixed
-    placeholder
+    :fixed="true"
+    :placeholder="true"
     safe-area-inset-bottom
     active-color="#2D5A3D"
     inactive-color="#999999"

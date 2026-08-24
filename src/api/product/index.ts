@@ -1,6 +1,12 @@
 import { request } from "@/utils/request";
 import type { PageResult } from "../common";
-import type { CategoryItem, ProductDetail, ProductItem, ProductQueryParams } from "./types";
+import type {
+  CategoryItem,
+  ProductCatalog,
+  ProductDetail,
+  ProductItem,
+  ProductQueryParams,
+} from "./types";
 
 const PRODUCT_BASE_URL = "/app/product";
 
@@ -14,6 +20,20 @@ interface ServerProductCard {
   price: number;
   originalPrice?: number;
   sales: number;
+  painFriendly?: boolean;
+}
+
+interface ServerProductCatalog {
+  groups: {
+    id: string;
+    name: string;
+    sections: {
+      id: string;
+      name: string;
+      total: number;
+      products: ServerProductCard[];
+    }[];
+  }[];
 }
 
 /** 后端商品详情结构 */
@@ -36,10 +56,12 @@ interface ServerProductDetail extends ServerProductCard {
 const toProductItem = (p: ServerProductCard): ProductItem => ({
   id: p.id,
   name: p.name,
+  subTitle: p.subTitle || "",
   cover: p.mainImage || "",
   price: p.price,
   originalPrice: p.originalPrice ?? p.price,
   sales: p.sales,
+  painFriendly: Boolean(p.painFriendly),
   tags: p.tags ?? [],
 });
 
@@ -67,6 +89,23 @@ const toPageParams = (params: ProductQueryParams) => ({
 });
 
 const ProductAPI = {
+  /** 获取按一级/二级分类分组的连续商品目录。 */
+  async getCatalog(painFriendly = false): Promise<ProductCatalog> {
+    const result = await request<ServerProductCatalog>({
+      url: `${PRODUCT_BASE_URL}/catalog`,
+      params: painFriendly ? { painFriendly: true } : undefined,
+    });
+    return {
+      groups: (result.groups ?? []).map((group) => ({
+        ...group,
+        sections: group.sections.map((section) => ({
+          ...section,
+          products: section.products.map(toProductItem),
+        })),
+      })),
+    };
+  },
+
   /** 获取商品分类树（仅启用）。 */
   getCategories() {
     return request<CategoryItem[]>({ url: `${PRODUCT_BASE_URL}/categories` });

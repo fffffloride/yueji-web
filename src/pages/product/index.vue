@@ -1,290 +1,436 @@
 <template>
-  <YjPage :tabbar="RoutePath.PRODUCT" :padded="false">
-    <view class="product-center">
-      <!-- 顶部搜索 -->
-      <view class="product-center__search" @click="navigate(RoutePath.PRODUCT_SEARCH)">
-        <wd-icon name="search" size="32rpx" color="#999" />
-        <text class="product-center__search-placeholder">搜索项目 / 产品</text>
-      </view>
+  <YjPage class="product-catalog-page" :tabbar="RoutePath.PRODUCT" :padded="false">
+    <view class="product-catalog">
+      <scroll-view
+        class="product-catalog__sidebar"
+        scroll-y
+        :scroll-into-view="leftScrollIntoView"
+        :show-scrollbar="false"
+      >
+        <view
+          v-for="group in catalog.groups"
+          :id="leftDomId(group.id)"
+          :key="group.id"
+          class="product-catalog__category"
+          :class="{ 'product-catalog__category--active': activeGroupId === group.id }"
+          @click="selectGroup(group)"
+        >
+          {{ group.name }}
+        </view>
+      </scroll-view>
 
-      <view class="product-center__main">
-        <!-- 左侧一级分类 -->
-        <scroll-view class="product-center__sidebar" scroll-y>
-          <view
-            class="product-center__cat"
-            :class="{ 'product-center__cat--active': activeCategoryId === '' }"
-            @click="selectCategory('')"
-          >
-            全部
+      <view class="product-catalog__main">
+        <scroll-view
+          class="product-catalog__list"
+          scroll-y
+          scroll-with-animation
+          :scroll-into-view="rightScrollIntoView"
+          :show-scrollbar="false"
+          @scroll="handleScroll"
+        >
+          <view id="catalog-filter" class="product-catalog__filter">
+            <text class="product-catalog__heart">♥</text>
+            <text>仅查看疼痛友好项目</text>
+            <view class="product-catalog__filter-switch">
+              <wd-switch
+                :model-value="painFriendly"
+                :disabled="loading"
+                size="40rpx"
+                @change="handlePainFriendlyChange"
+              />
+            </view>
           </view>
+
+          <view v-if="loading && !loaded" class="product-catalog__status">加载中…</view>
+          <view v-else-if="loadError" class="product-catalog__status">
+            <text>{{ loadError }}</text>
+            <wd-button size="small" type="primary" @click="loadCatalog(painFriendly)">
+              重新加载
+            </wd-button>
+          </view>
+          <YjEmpty
+            v-else-if="catalog.groups.length === 0"
+            image="search"
+            text="暂无符合条件的商品"
+          />
+
           <view
-            v-for="cat in categories"
-            :key="cat.id"
-            class="product-center__cat"
-            :class="{ 'product-center__cat--active': activeCategoryId === cat.id }"
-            @click="selectCategory(cat.id)"
+            v-for="group in catalog.groups"
+            v-else
+            :id="groupDomId(group.id)"
+            :key="group.id"
+            class="catalog-group-anchor product-catalog__group"
           >
-            {{ cat.name }}
+            <view class="product-catalog__group-title">{{ group.name }}</view>
+
+            <scroll-view
+              v-if="group.sections.length > 1"
+              class="product-catalog__subnav"
+              scroll-x
+              :scroll-into-view="subScrollIntoView"
+              :show-scrollbar="false"
+            >
+              <view
+                v-for="section in group.sections"
+                :id="tabDomId(group.id, section.id)"
+                :key="section.id"
+                class="product-catalog__subnav-item"
+                :class="{
+                  'product-catalog__subnav-item--active':
+                    activeGroupId === group.id && activeSectionId === section.id,
+                }"
+                @click.stop="selectSection(group, section.id)"
+              >
+                {{ section.name }} ({{ section.total }})
+              </view>
+            </scroll-view>
+
+            <view
+              v-for="section in group.sections"
+              :id="sectionDomId(section.id)"
+              :key="section.id"
+              class="catalog-section-anchor product-catalog__section"
+            >
+              <view v-if="group.sections.length > 1" class="product-catalog__section-title">
+                {{ section.name }} ({{ section.total }})
+              </view>
+              <YjProductCard
+                v-for="product in section.products"
+                :key="product.id"
+                :product="product"
+              />
+            </view>
           </view>
         </scroll-view>
-
-        <!-- 右侧商品区 -->
-        <view class="product-center__content">
-          <!-- 二级分类 -->
-          <scroll-view v-if="subCategories.length" class="product-center__subcats" scroll-x>
-            <view
-              class="product-center__subcat"
-              :class="{ 'product-center__subcat--active': activeSubCategoryId === '' }"
-              @click="selectSubCategory('')"
-            >
-              全部
-            </view>
-            <view
-              v-for="sub in subCategories"
-              :key="sub.id"
-              class="product-center__subcat"
-              :class="{ 'product-center__subcat--active': activeSubCategoryId === sub.id }"
-              @click="selectSubCategory(sub.id)"
-            >
-              {{ sub.name }}
-            </view>
-          </scroll-view>
-
-          <!-- 排序栏 -->
-          <view class="product-center__sort">
-            <view
-              v-for="opt in sortOptions"
-              :key="opt.value"
-              class="product-center__sort-item"
-              :class="{ 'product-center__sort-item--active': sortValue === opt.value }"
-              @click="changeSort(opt.value)"
-            >
-              {{ opt.label }}
-              <template v-if="opt.value === 'price'">
-                <text v-if="sortValue === 'price'">{{ priceOrder === "asc" ? "↑" : "↓" }}</text>
-              </template>
-            </view>
-          </view>
-
-          <!-- 商品列表 -->
-          <scroll-view class="product-center__list" scroll-y @scrolltolower="loadMore">
-            <YjProductCard v-for="item in products" :key="item.id" :product="item" />
-            <YjEmpty v-if="!loading && products.length === 0" text="暂无商品" />
-            <view v-else-if="finished && products.length > 0" class="product-center__end">
-              没有更多了
-            </view>
-          </scroll-view>
-        </view>
       </view>
     </view>
   </YjPage>
 </template>
 
 <script setup lang="ts">
-import ProductAPI, { type CategoryItem, type ProductItem } from "@/api/product";
+import ProductAPI, {
+  type ProductCatalog,
+  type ProductCatalogGroup,
+} from "@/api/product";
 import { RoutePath } from "@/constants";
-import { navigate } from "@/utils/navigate";
+import { findActiveAnchor, type CatalogAnchor } from "@/utils/catalog-scroll";
 
-type SortValue = "default" | "sales" | "price" | "new";
+interface ScrollEvent {
+  detail: { scrollHeight: number; scrollTop: number };
+}
 
-const sortOptions: { label: string; value: SortValue }[] = [
-  { label: "综合", value: "default" },
-  { label: "销量", value: "sales" },
-  { label: "价格", value: "price" },
-  { label: "新品", value: "new" },
-];
+interface ElementRect {
+  height?: number;
+  id?: string;
+  top: number;
+}
 
-const categories = ref<CategoryItem[]>([]);
-const activeCategoryId = ref("");
-const activeSubCategoryId = ref("");
-const sortValue = ref<SortValue>("default");
-const priceOrder = ref<"asc" | "desc">("asc");
-
-const products = ref<ProductItem[]>([]);
+const catalog = ref<ProductCatalog>({ groups: [] });
+const painFriendly = ref(false);
 const loading = ref(false);
-const finished = ref(false);
-const pageNum = ref(1);
-const PAGE_SIZE = 10;
+const loaded = ref(false);
+const loadError = ref("");
+const activeGroupId = ref("");
+const activeSectionId = ref("");
+const leftScrollIntoView = ref("");
+const rightScrollIntoView = ref("");
+const subScrollIntoView = ref("");
+const groupAnchors = ref<CatalogAnchor[]>([]);
+const sectionAnchors = ref<CatalogAnchor[]>([]);
+const currentScrollTop = ref(0);
+const currentScrollHeight = ref(0);
+const listViewportHeight = ref(0);
+const instance = getCurrentInstance();
+
 let requestSequence = 0;
+let jumping = false;
+let jumpTimer: ReturnType<typeof setTimeout> | undefined;
 
-const subCategories = computed(() => {
-  const current = categories.value.find((c) => c.id === activeCategoryId.value);
-  return current?.children ?? [];
-});
+const groupDomId = (id: string) => `catalog-group-${id}`;
+const sectionDomId = (id: string) => `catalog-section-${id}`;
+const leftDomId = (id: string) => `catalog-left-${id}`;
+const tabDomId = (groupId: string, sectionId: string) =>
+  `catalog-tab-${groupId}-${sectionId}`;
 
-async function loadCategories(): Promise<void> {
-  try {
-    categories.value = await ProductAPI.getCategories();
-  } catch {
-    // 请求层已 toast
+function revealLeft(id: string): void {
+  leftScrollIntoView.value = "";
+  nextTick(() => {
+    leftScrollIntoView.value = leftDomId(id);
+  });
+}
+
+function revealSub(groupId: string, sectionId: string): void {
+  subScrollIntoView.value = "";
+  nextTick(() => {
+    subScrollIntoView.value = tabDomId(groupId, sectionId);
+  });
+}
+
+function setActive(groupId: string, sectionId: string): void {
+  if (groupId && activeGroupId.value !== groupId) {
+    activeGroupId.value = groupId;
+    revealLeft(groupId);
+  }
+  if (sectionId && activeSectionId.value !== sectionId) {
+    activeSectionId.value = sectionId;
+    revealSub(groupId, sectionId);
   }
 }
 
-async function fetchProducts(reset = false): Promise<void> {
-  if (!reset && loading.value) return;
-  const sequence = reset ? ++requestSequence : requestSequence;
-  if (reset) {
-    pageNum.value = 1;
-    finished.value = false;
-    products.value = [];
+function firstActive(): void {
+  const firstGroup = catalog.value.groups[0];
+  activeGroupId.value = firstGroup?.id ?? "";
+  activeSectionId.value = firstGroup?.sections[0]?.id ?? "";
+  if (firstGroup) {
+    revealLeft(firstGroup.id);
+    if (activeSectionId.value) revealSub(firstGroup.id, activeSectionId.value);
   }
-  if (finished.value) return;
+}
 
+function scrollRightTo(domId: string): void {
+  jumping = true;
+  rightScrollIntoView.value = "";
+  nextTick(() => {
+    rightScrollIntoView.value = domId;
+  });
+  if (jumpTimer) clearTimeout(jumpTimer);
+  jumpTimer = setTimeout(() => {
+    jumping = false;
+    syncActiveFromScroll(currentScrollTop.value);
+  }, 600);
+}
+
+function selectGroup(group: ProductCatalogGroup): void {
+  const firstSection = group.sections[0];
+  setActive(group.id, firstSection?.id ?? "");
+  scrollRightTo(groupDomId(group.id));
+}
+
+function selectSection(group: ProductCatalogGroup, sectionId: string): void {
+  setActive(group.id, sectionId);
+  scrollRightTo(sectionDomId(sectionId));
+}
+
+function syncActiveFromScroll(scrollTop: number): void {
+  const position = scrollTop + uni.upx2px(24);
+  const atEnd =
+    currentScrollHeight.value > 0 &&
+    scrollTop + listViewportHeight.value >= currentScrollHeight.value - 2;
+  const groupId = findActiveAnchor(groupAnchors.value, position, atEnd);
+  const group = catalog.value.groups.find((item) => item.id === groupId);
+  if (!group) return;
+
+  const sectionIds = new Set(group.sections.map((section) => section.id));
+  const activeSection = findActiveAnchor(
+    sectionAnchors.value.filter((anchor) => sectionIds.has(anchor.id)),
+    position,
+    atEnd
+  );
+  setActive(group.id, activeSection || group.sections[0]?.id || "");
+}
+
+function handleScroll(event: ScrollEvent): void {
+  currentScrollTop.value = event.detail.scrollTop;
+  currentScrollHeight.value = event.detail.scrollHeight;
+  if (!jumping) syncActiveFromScroll(event.detail.scrollTop);
+}
+
+function measureAnchors(): void {
+  const query = uni.createSelectorQuery();
+  if (instance?.proxy) query.in(instance.proxy);
+  query.select(".product-catalog__list").boundingClientRect();
+  query.selectAll(".catalog-group-anchor").boundingClientRect();
+  query.selectAll(".catalog-section-anchor").boundingClientRect();
+  query.exec((results) => {
+    const container = results[0] as ElementRect | undefined;
+    const groups = (results[1] ?? []) as ElementRect[];
+    const sections = (results[2] ?? []) as ElementRect[];
+    if (!container) return;
+
+    listViewportHeight.value = container.height ?? 0;
+    groupAnchors.value = groups
+      .filter((rect) => rect.id)
+      .map((rect) => ({
+        id: rect.id!.replace("catalog-group-", ""),
+        top: rect.top - container.top + currentScrollTop.value,
+      }));
+    sectionAnchors.value = sections
+      .filter((rect) => rect.id)
+      .map((rect) => ({
+        id: rect.id!.replace("catalog-section-", ""),
+        top: rect.top - container.top + currentScrollTop.value,
+      }));
+    syncActiveFromScroll(currentScrollTop.value);
+  });
+}
+
+function scheduleAnchorMeasure(): void {
+  nextTick(() => {
+    setTimeout(measureAnchors, 50);
+  });
+}
+
+async function loadCatalog(nextPainFriendly = painFriendly.value): Promise<void> {
+  const sequence = ++requestSequence;
   loading.value = true;
-  const requestedPage = pageNum.value;
+  if (!loaded.value) loadError.value = "";
   try {
-    const result = await ProductAPI.getPage({
-      pageNum: requestedPage,
-      pageSize: PAGE_SIZE,
-      categoryId: activeSubCategoryId.value || activeCategoryId.value || undefined,
-      sortBy: sortValue.value === "default" ? undefined : sortValue.value,
-      order: sortValue.value === "price" ? priceOrder.value : undefined,
-    });
+    const result = await ProductAPI.getCatalog(nextPainFriendly);
     if (sequence !== requestSequence) return;
-    products.value = [...products.value, ...result.list];
-    finished.value = products.value.length >= result.total;
-    pageNum.value = requestedPage + 1;
-  } catch {
-    // 请求层已 toast
+    catalog.value = result;
+    painFriendly.value = nextPainFriendly;
+    loaded.value = true;
+    loadError.value = "";
+    currentScrollTop.value = 0;
+    firstActive();
+    scrollRightTo("catalog-filter");
+    scheduleAnchorMeasure();
+  } catch (error) {
+    if (sequence !== requestSequence) return;
+    if (!loaded.value) loadError.value = error instanceof Error ? error.message : "加载失败";
   } finally {
     if (sequence === requestSequence) loading.value = false;
   }
 }
 
-function selectCategory(id: string): void {
-  activeCategoryId.value = id;
-  activeSubCategoryId.value = "";
-  fetchProducts(true);
+function handlePainFriendlyChange({ value }: { value: boolean }): void {
+  loadCatalog(Boolean(value));
 }
 
-function selectSubCategory(id: string): void {
-  activeSubCategoryId.value = id;
-  fetchProducts(true);
-}
+onLoad(() => {
+  loadCatalog();
+});
 
-function changeSort(value: SortValue): void {
-  if (value === "price" && sortValue.value === "price") {
-    priceOrder.value = priceOrder.value === "asc" ? "desc" : "asc";
-  } else {
-    sortValue.value = value;
-    if (value === "price") priceOrder.value = "asc";
-  }
-  fetchProducts(true);
-}
-
-function loadMore(): void {
-  fetchProducts();
-}
-
-onShow(() => {
-  if (categories.value.length === 0) loadCategories();
-  fetchProducts(true);
+onBeforeUnmount(() => {
+  if (jumpTimer) clearTimeout(jumpTimer);
 });
 </script>
 
 <style lang="scss" scoped>
-.product-center {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+.product-catalog-page {
+  height: calc(100vh - var(--window-top, 0px));
+  min-height: 0;
+  overflow: hidden;
 
-  &__search {
-    display: flex;
-    align-items: center;
-    padding: 16rpx 24rpx;
-    margin: 20rpx 24rpx;
-    background: #f5f5f5;
-    border-radius: 32rpx;
-  }
-
-  &__search-placeholder {
-    margin-left: 12rpx;
-    font-size: 26rpx;
-    color: #999;
-  }
-
-  &__main {
-    display: flex;
-    flex: 1;
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+  :deep(.page__body) {
     min-height: 0;
+    padding-top: 0;
+    overflow: hidden;
   }
+}
+
+.product-catalog {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  background: $color-bg;
 
   &__sidebar {
     flex-shrink: 0;
     width: 176rpx;
     height: 100%;
-    background: #f7f8fa;
+    background: $color-bg-page;
   }
 
-  &__cat {
-    padding: 28rpx 16rpx;
-    font-size: 26rpx;
-    color: #666;
-    text-align: center;
+  &__category {
+    padding: 34rpx 20rpx 34rpx 28rpx;
+    font-size: 27rpx;
+    color: $color-text-content;
 
     &--active {
+      padding-left: 22rpx;
       font-weight: 600;
-      color: #2d5a3d;
-      background: #fff;
-      border-left: 6rpx solid #2d5a3d;
+      color: $color-text-title;
+      background: $color-bg;
+      border-left: 6rpx solid $color-primary-light;
     }
   }
 
-  &__content {
-    display: flex;
+  &__main {
     flex: 1;
-    flex-direction: column;
     min-width: 0;
-    padding: 0 20rpx;
-  }
-
-  &__subcats {
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-
-  &__subcat {
-    display: inline-block;
-    padding: 8rpx 24rpx;
-    margin: 16rpx 12rpx 8rpx 0;
-    font-size: 24rpx;
-    color: #666;
-    background: #f5f5f5;
-    border-radius: 24rpx;
-
-    &--active {
-      color: #fff;
-      background: #2d5a3d;
-    }
-  }
-
-  &__sort {
-    display: flex;
-    flex-shrink: 0;
-    padding: 16rpx 0;
-  }
-
-  &__sort-item {
-    margin-right: 40rpx;
-    font-size: 26rpx;
-    color: #666;
-
-    &--active {
-      font-weight: 600;
-      color: #2d5a3d;
-    }
+    height: 100%;
   }
 
   &__list {
-    flex: 1;
-    min-height: 0;
+    width: 100%;
+    height: 100%;
   }
 
-  &__end {
-    padding: 24rpx 0;
-    font-size: 24rpx;
-    color: #bbb;
-    text-align: center;
+  &__filter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 94rpx;
+    padding: 0 20rpx;
+    margin: 0 20rpx;
+    font-size: 27rpx;
+    color: $color-text-content;
+    border-bottom: 2rpx solid $color-text-content;
+  }
+
+  &__filter-switch {
+    margin-left: 14rpx;
+  }
+
+  &__heart {
+    margin-right: 8rpx;
+    color: $color-primary-light;
+  }
+
+  &__group {
+    padding: 0 20rpx;
+  }
+
+  &__group-title,
+  &__section-title {
+    font-weight: 600;
+    color: $color-text-title;
+  }
+
+  &__group-title {
+    padding: 32rpx 0 18rpx;
+    font-size: 34rpx;
+  }
+
+  &__subnav {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 10rpx 0 14rpx;
+    white-space: nowrap;
+    background: $color-bg;
+  }
+
+  &__subnav-item {
+    display: inline-block;
+    padding: 14rpx 22rpx;
+    margin-right: 18rpx;
+    font-size: 25rpx;
+    color: $color-text-placeholder;
+    background: $color-bg-page;
+
+    &--active {
+      color: $color-bg;
+      background: $color-primary-dark;
+    }
+  }
+
+  &__section-title {
+    padding: 24rpx 0 8rpx;
+    font-size: 30rpx;
+  }
+
+  &__status {
+    display: flex;
+    flex-direction: column;
+    gap: 24rpx;
+    align-items: center;
+    justify-content: center;
+    min-height: 420rpx;
+    font-size: $font-size-sm;
+    color: $color-text-sub;
   }
 }
 </style>

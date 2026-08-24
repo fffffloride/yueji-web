@@ -1,24 +1,32 @@
 <template>
   <view class="product-card" @click="handleClick">
-    <image class="product-card__cover" :src="product.cover" mode="aspectFill" lazy-load />
+    <image
+      v-if="product.cover && !imageFailed"
+      class="product-card__cover"
+      :src="product.cover"
+      mode="aspectFill"
+      lazy-load
+      @error="imageFailed = true"
+    />
+    <view v-else class="product-card__cover product-card__cover--empty">悦己</view>
     <view class="product-card__body">
-      <view class="product-card__name">{{ product.name }}</view>
-      <view v-if="product.tags.length" class="product-card__tags">
-        <wd-tag v-for="tag in product.tags" :key="tag" type="primary" plain custom-class="mr-1">
-          {{ tag }}
-        </wd-tag>
+      <view class="product-card__title-row">
+        <view class="product-card__name">{{ product.name }}</view>
+        <text v-if="product.tags[0]" class="product-card__tag">{{ product.tags[0] }}</text>
+      </view>
+      <view v-if="product.subTitle" class="product-card__subtitle">{{ product.subTitle }}</view>
+      <view class="product-card__meta">
+        <text>已售{{ product.sales }}</text>
+        <text v-if="product.painFriendly" class="product-card__friendly">♥ 疼痛友好</text>
       </view>
       <view class="product-card__bottom">
         <view class="product-card__price">
-          <text class="product-card__price-now">{{ formatPrice(product.price, true) }}</text>
-          <text
-            v-if="product.originalPrice > product.price"
-            class="product-card__price-origin"
-          >
-            {{ formatPrice(product.originalPrice, true) }}
-          </text>
+          <text class="product-card__price-now">{{ compactPrice(product.price) }}</text>
+          <text class="product-card__price-suffix">起</text>
         </view>
-        <text class="product-card__sales">已售{{ product.sales }}</text>
+        <text v-if="discount > 0" class="product-card__discount">
+          优惠{{ compactPrice(discount, false) }}
+        </text>
       </view>
     </view>
   </view>
@@ -31,26 +39,46 @@ import { formatPrice } from "@/utils/format";
 import { navigate } from "@/utils/navigate";
 
 const props = defineProps<{ product: ProductItem }>();
+const imageFailed = ref(false);
+const discount = computed(() => Math.max(0, props.product.originalPrice - props.product.price));
+
+function compactPrice(cents: number, withSymbol = true): string {
+  return formatPrice(cents, withSymbol).replace(/\.00$/, "");
+}
 
 function handleClick(): void {
   navigate(RoutePath.PRODUCT_DETAIL, { params: { id: props.product.id } });
 }
+
+watch(
+  () => props.product.cover,
+  () => {
+    imageFailed.value = false;
+  }
+);
 </script>
 
 <style lang="scss" scoped>
 .product-card {
   display: flex;
-  padding: 20rpx;
-  margin-bottom: 20rpx;
+  padding: 16rpx 0;
+  margin-bottom: 12rpx;
   background: #fff;
-  border-radius: 16rpx;
 
   &__cover {
+    display: flex;
     flex-shrink: 0;
-    width: 180rpx;
-    height: 180rpx;
-    background: #f5f5f5;
-    border-radius: 12rpx;
+    align-items: center;
+    justify-content: center;
+    width: 200rpx;
+    height: 150rpx;
+    font-size: $font-size-sm;
+    color: $color-text-placeholder;
+    background: $color-bg-page;
+
+    &--empty {
+      letter-spacing: 4rpx;
+    }
   }
 
   &__body {
@@ -58,47 +86,82 @@ function handleClick(): void {
     flex: 1;
     flex-direction: column;
     min-width: 0;
-    margin-left: 20rpx;
+    margin-left: 22rpx;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    min-width: 0;
   }
 
   &__name {
-    display: -webkit-box;
-    overflow: hidden;
-    font-size: 28rpx;
-    font-weight: 500;
-    line-height: 1.4;
-    color: #333;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    flex: 1;
+    min-width: 0;
+    font-size: 30rpx;
+    font-weight: 600;
+    color: $color-text-title;
+
+    @include ellipsis;
   }
 
-  &__tags {
+  &__tag {
+    flex-shrink: 0;
+    padding: 2rpx 8rpx;
+    margin-left: 8rpx;
+    font-size: $font-size-xs;
+    color: $color-price;
+    background: rgb(255 107 53 / 10%);
+  }
+
+  &__subtitle {
     margin-top: 8rpx;
+    font-size: 25rpx;
+    color: $color-primary;
+
+    @include ellipsis;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    margin-top: 8rpx;
+    font-size: $font-size-sm;
+    color: $color-text-sub;
+  }
+
+  &__friendly {
+    padding: 2rpx 8rpx;
+    margin-left: 12rpx;
+    color: $color-primary;
+    background: rgb(45 90 61 / 8%);
   }
 
   &__bottom {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
+    align-items: center;
     margin-top: auto;
   }
 
   &__price-now {
-    font-size: 32rpx;
+    font-size: 36rpx;
     font-weight: 600;
-    color: #c94f4f;
+    color: $color-primary-light;
   }
 
-  &__price-origin {
-    margin-left: 12rpx;
-    font-size: 24rpx;
-    color: #999;
-    text-decoration: line-through;
+  &__price-suffix {
+    margin-left: 4rpx;
+    font-size: $font-size-xs;
+    color: $color-primary-light;
   }
 
-  &__sales {
-    font-size: 22rpx;
-    color: #999;
+  &__discount {
+    padding: 4rpx 8rpx;
+    margin-left: 14rpx;
+    font-size: $font-size-sm;
+    color: $color-primary-light;
+    border: 2rpx solid $color-primary-lighter;
   }
 }
 </style>
