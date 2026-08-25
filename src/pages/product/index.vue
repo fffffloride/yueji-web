@@ -44,7 +44,7 @@
           <view v-if="loading && !loaded" class="product-catalog__status">加载中…</view>
           <view v-else-if="loadError" class="product-catalog__status">
             <text>{{ loadError }}</text>
-            <wd-button size="small" type="primary" @click="loadCatalog(painFriendly)">
+            <wd-button size="small" type="primary" @click="loadCatalog">
               重新加载
             </wd-button>
           </view>
@@ -113,7 +113,11 @@ import ProductAPI, {
   type ProductCatalogGroup,
 } from "@/api/product";
 import { RoutePath } from "@/constants";
-import { findActiveAnchor, type CatalogAnchor } from "@/utils/catalog-scroll";
+import {
+  filterPainFriendlyCatalog,
+  findActiveAnchor,
+  type CatalogAnchor,
+} from "@/utils/catalog-scroll";
 
 interface ScrollEvent {
   detail: { scrollHeight: number; scrollTop: number };
@@ -126,6 +130,7 @@ interface ElementRect {
 }
 
 const catalog = ref<ProductCatalog>({ groups: [] });
+const fullCatalog = ref<ProductCatalog>({ groups: [] });
 const painFriendly = ref(false);
 const loading = ref(false);
 const loaded = ref(false);
@@ -142,7 +147,6 @@ const currentScrollHeight = ref(0);
 const listViewportHeight = ref(0);
 const instance = getCurrentInstance();
 
-let requestSequence = 0;
 let jumping = false;
 let jumpTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -270,31 +274,35 @@ function scheduleAnchorMeasure(): void {
   });
 }
 
-async function loadCatalog(nextPainFriendly = painFriendly.value): Promise<void> {
-  const sequence = ++requestSequence;
+function applyPainFriendlyFilter(enabled: boolean): void {
+  catalog.value = filterPainFriendlyCatalog(fullCatalog.value, enabled);
+  painFriendly.value = enabled;
+  currentScrollTop.value = 0;
+  currentScrollHeight.value = 0;
+  groupAnchors.value = [];
+  sectionAnchors.value = [];
+  firstActive();
+  scrollRightTo("catalog-filter");
+  scheduleAnchorMeasure();
+}
+
+async function loadCatalog(): Promise<void> {
   loading.value = true;
-  if (!loaded.value) loadError.value = "";
+  loadError.value = "";
   try {
-    const result = await ProductAPI.getCatalog(nextPainFriendly);
-    if (sequence !== requestSequence) return;
-    catalog.value = result;
-    painFriendly.value = nextPainFriendly;
+    const result = await ProductAPI.getCatalog();
+    fullCatalog.value = result;
     loaded.value = true;
-    loadError.value = "";
-    currentScrollTop.value = 0;
-    firstActive();
-    scrollRightTo("catalog-filter");
-    scheduleAnchorMeasure();
+    applyPainFriendlyFilter(false);
   } catch (error) {
-    if (sequence !== requestSequence) return;
-    if (!loaded.value) loadError.value = error instanceof Error ? error.message : "加载失败";
+    loadError.value = error instanceof Error ? error.message : "加载失败";
   } finally {
-    if (sequence === requestSequence) loading.value = false;
+    loading.value = false;
   }
 }
 
 function handlePainFriendlyChange({ value }: { value: boolean }): void {
-  loadCatalog(Boolean(value));
+  applyPainFriendlyFilter(Boolean(value));
 }
 
 onLoad(() => {

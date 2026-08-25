@@ -90,11 +90,8 @@ const toPageParams = (params: ProductQueryParams) => ({
 
 const ProductAPI = {
   /** 获取按一级/二级分类分组的连续商品目录。 */
-  async getCatalog(painFriendly = false): Promise<ProductCatalog> {
-    const result = await request<ServerProductCatalog>({
-      url: `${PRODUCT_BASE_URL}/catalog`,
-      params: painFriendly ? { painFriendly: true } : undefined,
-    });
+  async getCatalog(): Promise<ProductCatalog> {
+    const result = await request<ServerProductCatalog>({ url: `${PRODUCT_BASE_URL}/catalog` });
     return {
       groups: (result.groups ?? []).map((group) => ({
         ...group,
