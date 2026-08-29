@@ -37,6 +37,7 @@ export interface AvailableCoupon {
   couponName: string | null;
   couponType: "FULL_REDUCTION" | "DISCOUNT" | "EXCHANGE" | null;
   couponAmount: number;
+  thresholdAmount: number;
   validEnd: string | null;
 }
 

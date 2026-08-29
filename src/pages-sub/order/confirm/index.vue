@@ -157,9 +157,14 @@
             @click="selectCoupon(coupon.memberCouponId)"
           >
             <view class="coupon-card__amount">
-              <text class="coupon-card__amount-value">{{ formatPrice(coupon.couponAmount) }}</text>
-              <text>元</text>
-              <text class="coupon-card__amount-label">本单可减</text>
+              <view class="coupon-card__amount-main">
+                <text class="coupon-card__amount-symbol">¥</text>
+                <text class="coupon-card__amount-value">{{ formatCouponAmount(coupon.couponAmount) }}</text>
+                <text class="coupon-card__amount-unit">元</text>
+              </view>
+              <text class="coupon-card__amount-label">
+                {{ coupon.thresholdAmount > 0 ? `满${formatCouponAmount(coupon.thresholdAmount)}可用` : "无门槛" }}
+              </text>
             </view>
             <view class="coupon-card__content">
               <view class="coupon-card__name">{{ coupon.couponName || "优惠券" }}</view>
@@ -257,6 +262,8 @@ const pointsHint = computed(() => {
   if (!pointsEnabled.value) return `本单最多可用 ${quote.value.maxUsablePoints} 积分`;
   return `使用 ${quote.value.pointsUsed} 积分，抵扣 ${formatPrice(quote.value.pointsDeduct, true)}`;
 });
+
+const formatCouponAmount = (cents: number) => formatPrice(cents).replace(/\.00$/, "");
 
 async function loadDisplayItems() {
   if (!source.value) return;
@@ -666,23 +673,36 @@ onLoad((options) => {
   &__amount {
     display: flex;
     flex: 0 0 190rpx;
-    flex-wrap: wrap;
-    gap: 4rpx;
-    place-content: center;
-    align-items: baseline;
+    flex-direction: column;
+    gap: $spacing-xs;
+    align-items: center;
+    justify-content: center;
     padding: $spacing-md;
     color: $color-primary;
     border-right: 2rpx dashed rgb(45 90 61 / 20%);
   }
 
+  &__amount-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  &__amount-symbol,
+  &__amount-unit {
+    font-size: $font-size-sm;
+    font-weight: 600;
+  }
+
   &__amount-value {
-    font-size: 48rpx;
+    margin: 0 6rpx;
+    font-size: 52rpx;
     font-weight: 700;
   }
 
   &__amount-label {
-    flex-basis: 100%;
-    font-size: $font-size-xs;
+    font-size: $font-size-sm;
     text-align: center;
   }
 
