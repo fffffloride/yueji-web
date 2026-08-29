@@ -2,23 +2,58 @@
 
 面向医美行业的微信小程序，提供商品展示、在线预约、会员体系、积分商城、二级分销等能力。
 
-当前仓库处于**脚手架阶段**：工程配置、主题体系、请求与登录封装、全量路由与页面骨架已就绪，业务页面内容待逐个实现。每个页面里的 `YjPlaceholder` 标注了它对应的需求条目，页面开始实现后删除即可。
+工程配置、主题体系、请求与登录封装、全量路由与页面骨架已就绪，业务页面按 `docs/改造计划.md` 逐步接入真实接口。
 
 > 需求文档 5.2 原本约定「微信小程序原生 + Vant Weapp」，本项目改用 **uni-app + Vue 3 + TypeScript**，UI 库用 **wot-design-uni** 替代 Vant Weapp。
 
 ## 技术栈
 
-| 分类 | 选型 |
-| --- | --- |
-| 框架 | uni-app（Vue 3 + Vite 5 + TypeScript） |
-| UI | wot-design-uni（easycom 自动引入） |
-| 样式 | SCSS（BEM）+ UnoCSS（unocss-applet） |
-| 状态 | Pinia + pinia-plugin-persistedstate |
+| 分类 | 选型                                                 |
+| ---- | ---------------------------------------------------- |
+| 框架 | uni-app（Vue 3 + Vite 5 + TypeScript）               |
+| UI   | wot-design-uni（easycom 自动引入）                   |
+| 样式 | SCSS（BEM）+ UnoCSS（unocss-applet）                 |
+| 状态 | Pinia + pinia-plugin-persistedstate                  |
 | 规范 | ESLint 9 + Prettier + Stylelint + husky + commitlint |
 
 ## 环境要求
 
-Node.js >= 18，pnpm >= 9。
+Node.js >= 22.12，pnpm 9.15.9。
+
+## 跨电脑工作区
+
+三个仓库使用固定同级目录，不依赖 Windows 或 macOS 的绝对路径：
+
+```text
+yueji/
+├── yueji-web
+├── yueji-backend
+└── yueji-oss
+```
+
+首次准备：
+
+```bash
+mkdir yueji
+cd yueji
+git clone https://github.com/fffffloride/yueji-web.git
+git clone https://github.com/fffffloride/yueji-backend.git
+git clone https://github.com/fffffloride/yueji-oss.git
+
+corepack enable
+corepack prepare pnpm@9.15.9 --activate
+
+cd yueji-web
+pnpm install --frozen-lockfile
+cd ../yueji-backend
+pnpm install --frozen-lockfile
+cp .env.example .env.dev
+docker compose -f docker/docker-compose.yml up -d
+cd ../yueji-oss
+pnpm install --frozen-lockfile
+```
+
+本地密钥只写入后端 `.env.dev`，不得提交 Git。需要真实数据验收时先在 `yueji-backend` 运行 `pnpm start:dev`。
 
 ## 快速开始
 
@@ -38,18 +73,30 @@ pnpm build:mp-weixin   # 产物在 dist/build/mp-weixin
 其他命令：
 
 ```bash
+pnpm dev:h5       # H5 本地预览
 pnpm type-check   # vue-tsc 类型检查
+pnpm verify:ui    # 非修改型 UI 全量验收
 pnpm lint         # ESLint 检查并修复
 pnpm lint:style   # Stylelint 检查并修复
 ```
 
+## 按截图还原页面
+
+仓库内置 [yueji-ui-from-screenshot](.agents/skills/yueji-ui-from-screenshot/SKILL.md) Skill。换电脑克隆后，在本仓库向 Codex 提供临时截图与触发动作说明：
+
+```text
+按悦己截图还原流程实现这个页面。第一张是入口态，第二张是筛选开启；菜单点击和内容滚动需要双向高亮。
+```
+
+Skill 会依次完成布局/状态/字段拆解、主题映射、短设计确认、最小实现、H5 `375×812` 与 `430×932` 交互验收、微信构建和精确 Git 提交。参考原图及临时对比图默认不进入仓库；微信开发者工具和真机保留为发布前人工门槛。
+
 ## 上线前必须补齐的配置
 
-| 位置 | 说明 |
-| --- | --- |
+| 位置                                     | 说明                                 |
+| ---------------------------------------- | ------------------------------------ |
 | `src/manifest.json` 的 `mp-weixin.appid` | 微信小程序 AppID，真机预览与发布必填 |
-| `.env.production` 的 `VITE_API_BASE_URL` | 生产接口域名，当前是占位值 |
-| `.env.development` 的 `VITE_USE_MOCK` | 后端接口就绪后改为 `false` |
+| `.env.production` 的 `VITE_API_BASE_URL` | 生产接口域名，当前是占位值           |
+| `.env.development` 的 `VITE_USE_MOCK`    | 后端接口就绪后改为 `false`           |
 
 ## 目录结构
 
