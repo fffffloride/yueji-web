@@ -1,6 +1,7 @@
 import { request } from "@/utils/request";
 import type { PageResult } from "../common";
 import type {
+  AvailableCoupon,
   OrderDetail,
   OrderForm,
   OrderListItem,
@@ -19,6 +20,14 @@ const OrderAPI = {
   quote(data: OrderForm) {
     return request<OrderQuote, OrderForm>({
       url: `${ORDER_BASE_URL}/quote`,
+      method: "POST",
+      data,
+    });
+  },
+
+  availableCoupons(data: OrderForm) {
+    return request<AvailableCoupon[], OrderForm>({
+      url: `${ORDER_BASE_URL}/available-coupons`,
       method: "POST",
       data,
     });

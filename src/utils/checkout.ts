@@ -20,3 +20,8 @@ export function parseCheckoutSource(options?: Record<string, string>): CheckoutS
   const quantity = Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, 99) : 1;
   return { items: [{ skuId, quantity }] };
 }
+
+/** 积分只提交服务端给出的本单上限；关闭抵扣时提交 0。 */
+export function resolvePointsToUse(enabled: boolean, maxUsablePoints: number): number {
+  return enabled ? Math.max(0, Math.floor(maxUsablePoints)) : 0;
+}

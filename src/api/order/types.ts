@@ -31,6 +31,15 @@ export interface OrderQuote {
   payAmount: number;
 }
 
+export interface AvailableCoupon {
+  memberCouponId: string;
+  couponId: string;
+  couponName: string | null;
+  couponType: "FULL_REDUCTION" | "DISCOUNT" | "EXCHANGE" | null;
+  couponAmount: number;
+  validEnd: string | null;
+}
+
 export interface OrderProduct {
   id: string;
   productId: string;

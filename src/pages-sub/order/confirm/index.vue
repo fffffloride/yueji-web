@@ -60,6 +60,44 @@
         />
       </view>
 
+      <view class="confirm-section confirm-benefits">
+        <view class="confirm-section__title confirm-benefits__title">
+          <text>优惠抵扣</text>
+          <wd-loading v-if="benefitsLoading" size="32rpx" />
+        </view>
+        <view
+          class="confirm-benefits__row"
+          :class="{ 'confirm-benefits__row--disabled': benefitsLocked }"
+          @click="openCouponPopup"
+        >
+          <view>
+            <view class="confirm-benefits__label">优惠券</view>
+            <view class="confirm-benefits__hint">
+              {{ selectedCoupon?.couponName || (coupons.length ? `${coupons.length} 张可用` : "暂无可用") }}
+            </view>
+          </view>
+          <view class="confirm-benefits__action">
+            <text v-if="quote.couponAmount > 0" class="confirm-benefits__discount">
+              -{{ formatPrice(quote.couponAmount, true) }}
+            </text>
+            <text v-else>不使用</text>
+            <wd-icon name="arrow-right" size="32rpx" />
+          </view>
+        </view>
+        <view class="confirm-benefits__row">
+          <view>
+            <view class="confirm-benefits__label">积分抵扣</view>
+            <view class="confirm-benefits__hint">{{ pointsHint }}</view>
+          </view>
+          <wd-switch
+            :model-value="pointsEnabled && canUsePoints"
+            :disabled="benefitsLocked || !canUsePoints"
+            size="44rpx"
+            @change="handlePointsChange"
+          />
+        </view>
+      </view>
+
       <view class="confirm-section confirm-price">
         <view class="confirm-section__title">金额明细</view>
         <view class="confirm-price__row">
@@ -70,9 +108,13 @@
           <text>{{ quote.memberLevelName || "会员" }}优惠</text>
           <text>-{{ formatPrice(quote.memberDiscount, true) }}</text>
         </view>
-        <view v-if="quote.discountAmount > quote.memberDiscount" class="confirm-price__row confirm-price__discount">
-          <text>其他优惠</text>
-          <text>-{{ formatPrice(quote.discountAmount - quote.memberDiscount, true) }}</text>
+        <view v-if="quote.couponAmount > 0" class="confirm-price__row confirm-price__discount">
+          <text>优惠券</text>
+          <text>-{{ formatPrice(quote.couponAmount, true) }}</text>
+        </view>
+        <view v-if="quote.pointsDeduct > 0" class="confirm-price__row confirm-price__discount">
+          <text>积分抵扣</text>
+          <text>-{{ formatPrice(quote.pointsDeduct, true) }}</text>
         </view>
         <view class="confirm-price__row confirm-price__pay">
           <text>应付</text>
@@ -81,13 +123,75 @@
       </view>
     </template>
 
+    <wd-popup
+      v-model="couponPopupVisible"
+      position="bottom"
+      root-portal
+      safe-area-inset-bottom
+      custom-style="border-radius: 24rpx 24rpx 0 0; overflow: hidden;"
+    >
+      <view class="coupon-popup">
+        <view class="coupon-popup__header">
+          <text>优惠券</text>
+          <wd-icon name="close" size="44rpx" @click="couponPopupVisible = false" />
+        </view>
+        <scroll-view class="coupon-popup__list" scroll-y :show-scrollbar="false">
+          <view
+            class="coupon-popup__none"
+            :class="{ 'coupon-popup__none--active': !selectedCouponId }"
+            @click="selectCoupon('')"
+          >
+            <text>不使用优惠券</text>
+            <view
+              class="coupon-popup__check"
+              :class="{ 'coupon-popup__check--active': !selectedCouponId }"
+            >
+              {{ !selectedCouponId ? "✓" : "" }}
+            </view>
+          </view>
+          <view
+            v-for="coupon in coupons"
+            :key="coupon.memberCouponId"
+            class="coupon-card"
+            :class="{ 'coupon-card--active': selectedCouponId === coupon.memberCouponId }"
+            @click="selectCoupon(coupon.memberCouponId)"
+          >
+            <view class="coupon-card__amount">
+              <text class="coupon-card__amount-value">{{ formatPrice(coupon.couponAmount) }}</text>
+              <text>元</text>
+              <text class="coupon-card__amount-label">本单可减</text>
+            </view>
+            <view class="coupon-card__content">
+              <view class="coupon-card__name">{{ coupon.couponName || "优惠券" }}</view>
+              <view v-if="coupon.validEnd" class="coupon-card__date">
+                有效期至 {{ formatDate(coupon.validEnd) }}
+              </view>
+            </view>
+            <view
+              class="coupon-popup__check"
+              :class="{
+                'coupon-popup__check--active': selectedCouponId === coupon.memberCouponId,
+              }"
+            >
+              {{ selectedCouponId === coupon.memberCouponId ? "✓" : "" }}
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </wd-popup>
+
     <template #footer>
       <view v-if="quote && !loadError" class="confirm-footer">
         <view class="confirm-footer__amount">
           <text>应付</text>
           <text>{{ formatPrice(quote.payAmount, true) }}</text>
         </view>
-        <wd-button type="primary" :loading="submitting" :disabled="submitting" @click="submit">
+        <wd-button
+          type="primary"
+          :loading="submitting"
+          :disabled="submitting || benefitsLoading"
+          @click="submit"
+        >
           {{ createdOrder ? "继续支付" : quote.payAmount === 0 ? "确认订单" : "提交订单" }}
         </wd-button>
       </view>
@@ -96,14 +200,23 @@
 </template>
 
 <script setup lang="ts">
-import OrderAPI, { type OrderDetail, type OrderForm, type OrderQuote } from "@/api/order";
+import OrderAPI, {
+  type AvailableCoupon,
+  type OrderDetail,
+  type OrderForm,
+  type OrderQuote,
+} from "@/api/order";
 import PayAPI from "@/api/pay";
 import ProductAPI from "@/api/product";
 import { RoutePath } from "@/constants";
 import { useCartStore } from "@/stores/cart";
 import { useUserStore } from "@/stores/user";
-import { parseCheckoutSource, type CheckoutSource } from "@/utils/checkout";
-import { formatPrice } from "@/utils/format";
+import {
+  parseCheckoutSource,
+  resolvePointsToUse,
+  type CheckoutSource,
+} from "@/utils/checkout";
+import { formatDate, formatPrice } from "@/utils/format";
 import { navigate } from "@/utils/navigate";
 
 interface DisplayItem {
@@ -120,14 +233,30 @@ const userStore = useUserStore();
 const source = ref<CheckoutSource>();
 const displayItems = ref<DisplayItem[]>([]);
 const quote = ref<OrderQuote>();
+const coupons = ref<AvailableCoupon[]>([]);
+const selectedCouponId = ref("");
+const couponPopupVisible = ref(false);
+const pointsEnabled = ref(true);
 const createdOrder = ref<OrderDetail>();
 const contactName = ref("");
 const contactMobile = ref("");
 const remark = ref("");
 const loading = ref(false);
 const submitting = ref(false);
+const benefitsLoading = ref(false);
 const loadError = ref("");
 const routeOptions = ref<Record<string, string>>({});
+
+const selectedCoupon = computed(() =>
+  coupons.value.find((coupon) => coupon.memberCouponId === selectedCouponId.value)
+);
+const canUsePoints = computed(() => (quote.value?.maxUsablePoints ?? 0) > 0);
+const benefitsLocked = computed(() => benefitsLoading.value || Boolean(createdOrder.value));
+const pointsHint = computed(() => {
+  if (!quote.value?.maxUsablePoints) return "暂无可抵扣积分";
+  if (!pointsEnabled.value) return `本单最多可用 ${quote.value.maxUsablePoints} 积分`;
+  return `使用 ${quote.value.pointsUsed} 积分，抵扣 ${formatPrice(quote.value.pointsDeduct, true)}`;
+});
 
 async function loadDisplayItems() {
   if (!source.value) return;
@@ -175,13 +304,70 @@ async function loadCheckout() {
     contactName.value ||= userStore.userInfo.nickname || "";
     contactMobile.value ||= userStore.userInfo.phone || "";
     await loadDisplayItems();
-    quote.value = await OrderAPI.quote(source.value);
+    try {
+      coupons.value = await OrderAPI.availableCoupons(source.value);
+    } catch {
+      coupons.value = [];
+    }
+    selectedCouponId.value = coupons.value[0]?.memberCouponId ?? "";
+    try {
+      quote.value = await requestBenefitsQuote(selectedCouponId.value, pointsEnabled.value);
+    } catch (error) {
+      if (!selectedCouponId.value) throw error;
+      selectedCouponId.value = "";
+      quote.value = await requestBenefitsQuote("", pointsEnabled.value);
+    }
   } catch (error) {
     quote.value = undefined;
     loadError.value = error instanceof Error ? error.message : "订单试算失败";
   } finally {
     loading.value = false;
   }
+}
+
+async function requestBenefitsQuote(couponId: string, usePoints: boolean) {
+  if (!source.value) throw new Error("订单参数不完整");
+  const form: OrderForm = {
+    ...source.value,
+    memberCouponId: couponId || undefined,
+    pointsToUse: 0,
+  };
+  const baseQuote = await OrderAPI.quote(form);
+  const pointsToUse = resolvePointsToUse(usePoints, baseQuote.maxUsablePoints);
+  return pointsToUse ? OrderAPI.quote({ ...form, pointsToUse }) : baseQuote;
+}
+
+async function applyBenefits(couponId: string, usePoints: boolean): Promise<boolean> {
+  if (!source.value || benefitsLocked.value) return false;
+  benefitsLoading.value = true;
+  try {
+    const nextQuote = await requestBenefitsQuote(couponId, usePoints);
+    quote.value = nextQuote;
+    selectedCouponId.value = couponId;
+    pointsEnabled.value = usePoints;
+    return true;
+  } catch {
+    return false;
+  } finally {
+    benefitsLoading.value = false;
+  }
+}
+
+function openCouponPopup() {
+  if (!benefitsLocked.value && coupons.value.length) couponPopupVisible.value = true;
+}
+
+async function selectCoupon(couponId: string) {
+  if (benefitsLoading.value) return;
+  if (couponId === selectedCouponId.value) {
+    couponPopupVisible.value = false;
+    return;
+  }
+  if (await applyBenefits(couponId, pointsEnabled.value)) couponPopupVisible.value = false;
+}
+
+function handlePointsChange({ value }: { value: boolean | number | string }) {
+  void applyBenefits(selectedCouponId.value, Boolean(value));
 }
 
 function validateContact(): boolean {
@@ -212,12 +398,21 @@ async function continuePayment(order: OrderDetail) {
 }
 
 async function submit() {
-  if (submitting.value || !source.value || !quote.value || !validateContact()) return;
+  if (
+    submitting.value ||
+    benefitsLoading.value ||
+    !source.value ||
+    !quote.value ||
+    !validateContact()
+  )
+    return;
   submitting.value = true;
   try {
     if (!createdOrder.value) {
       const form: OrderForm = {
         ...source.value,
+        memberCouponId: quote.value.memberCouponId || undefined,
+        pointsToUse: quote.value.pointsUsed,
         contactName: contactName.value.trim(),
         contactMobile: contactMobile.value.trim(),
         remark: remark.value.trim() || undefined,
@@ -338,6 +533,183 @@ onLoad((options) => {
     font-weight: 700;
     color: $color-text-title;
     border-top: 1rpx solid $color-line;
+  }
+}
+
+.confirm-benefits {
+  &__title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 104rpx;
+    border-bottom: 1rpx solid $color-line;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    &--disabled {
+      color: $color-text-disabled;
+    }
+  }
+
+  &__label {
+    color: $color-text-title;
+  }
+
+  &__hint {
+    max-width: 480rpx;
+    margin-top: 6rpx;
+    overflow: hidden;
+    font-size: $font-size-xs;
+    color: $color-text-placeholder;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__action {
+    display: flex;
+    gap: 6rpx;
+    align-items: center;
+    font-size: $font-size-sm;
+    color: $color-text-sub;
+  }
+
+  &__discount {
+    color: $color-primary;
+  }
+}
+
+.coupon-popup {
+  height: 820rpx;
+  max-height: 72vh;
+  background: $color-bg;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 104rpx;
+    padding: 0 $page-padding;
+    font-size: $font-size-lg;
+    font-weight: 700;
+    color: $color-text-title;
+  }
+
+  &__list {
+    height: calc(100% - 104rpx);
+    padding: 0 $page-padding $spacing-lg;
+  }
+
+  &__none {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 88rpx;
+    padding: 0 $spacing-md;
+    margin-bottom: $spacing-md;
+    color: $color-text-content;
+    background: $color-bg-page;
+    border: 2rpx solid transparent;
+    border-radius: $radius-input;
+
+    &--active {
+      color: $color-primary;
+      border-color: $color-primary-lighter;
+    }
+  }
+
+  &__check {
+    display: flex;
+    flex: 0 0 44rpx;
+    align-items: center;
+    justify-content: center;
+    width: 44rpx;
+    height: 44rpx;
+    font-size: $font-size-sm;
+    font-weight: 700;
+    color: transparent;
+    background: $color-bg;
+    border: 2rpx solid $color-text-disabled;
+    border-radius: 50%;
+
+    &--active {
+      color: $color-bg;
+      background: $color-primary;
+      border-color: $color-primary;
+    }
+  }
+}
+
+.coupon-card {
+  display: flex;
+  align-items: stretch;
+  min-height: 176rpx;
+  margin-bottom: $spacing-md;
+  overflow: hidden;
+  background: rgb(45 90 61 / 6%);
+  border: 2rpx solid transparent;
+  border-radius: $radius-card;
+
+  &--active {
+    border-color: $color-primary-lighter;
+  }
+
+  &__amount {
+    display: flex;
+    flex: 0 0 190rpx;
+    flex-wrap: wrap;
+    gap: 4rpx;
+    place-content: center;
+    align-items: baseline;
+    padding: $spacing-md;
+    color: $color-primary;
+    border-right: 2rpx dashed rgb(45 90 61 / 20%);
+  }
+
+  &__amount-value {
+    font-size: 48rpx;
+    font-weight: 700;
+  }
+
+  &__amount-label {
+    flex-basis: 100%;
+    font-size: $font-size-xs;
+    text-align: center;
+  }
+
+  &__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: $spacing-md;
+  }
+
+  &__name {
+    overflow: hidden;
+    font-weight: 600;
+    color: $color-text-title;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__date {
+    margin-top: $spacing-sm;
+    font-size: $font-size-xs;
+    color: $color-text-placeholder;
+  }
+
+  .coupon-popup__check {
+    align-self: center;
+    margin-right: $spacing-md;
   }
 }
 
