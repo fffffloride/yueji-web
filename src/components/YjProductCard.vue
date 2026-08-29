@@ -68,7 +68,7 @@ watch(
     align-items: center;
     justify-content: center;
     width: 200rpx;
-    height: 150rpx;
+    height: 180rpx;
     font-size: $font-size-sm;
     color: $color-text-placeholder;
     background: $color-bg-page;
