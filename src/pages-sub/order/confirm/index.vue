@@ -603,6 +603,8 @@ onLoad((options) => {
   }
 
   &__list {
+    box-sizing: border-box;
+    width: 100%;
     height: calc(100% - 104rpx);
     padding: 0 $page-padding $spacing-lg;
   }
