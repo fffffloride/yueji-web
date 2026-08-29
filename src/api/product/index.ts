@@ -27,6 +27,7 @@ interface ServerProductCatalog {
   groups: {
     id: string;
     name: string;
+    fixed?: boolean;
     sections: {
       id: string;
       name: string;

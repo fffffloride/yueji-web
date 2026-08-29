@@ -37,6 +37,7 @@ export interface ProductCatalogSection {
 export interface ProductCatalogGroup {
   id: string;
   name: string;
+  fixed?: boolean;
   sections: ProductCatalogSection[];
 }
 

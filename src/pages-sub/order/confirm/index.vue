@@ -53,6 +53,7 @@
         />
         <wd-textarea
           v-model="remark"
+          auto-height
           label="备注"
           clearable
           maxlength="255"

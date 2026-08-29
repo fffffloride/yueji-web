@@ -31,6 +31,19 @@ const product = (id: string, painFriendly: boolean) => ({
 const fullCatalog = {
   groups: [
     {
+      id: "fixed",
+      name: "固定分组",
+      fixed: true,
+      sections: [
+        {
+          id: "fixed",
+          name: "固定分组",
+          total: 1,
+          products: [product("fixed-normal", false)],
+        },
+      ],
+    },
+    {
       id: "g1",
       name: "一类",
       sections: [
@@ -57,5 +70,8 @@ assert.deepEqual(
       section.products.map((item) => item.id),
     ]),
   ]),
-  [["g1", [["s1", 1, ["friendly"]]]]]
+  [
+    ["fixed", [["fixed", 0, []]]],
+    ["g1", [["s1", 1, ["friendly"]]]],
+  ]
 );

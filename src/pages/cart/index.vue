@@ -33,12 +33,19 @@
           :disabled="item.invalid || busyId === item.id"
           @change="handleChecked(item, $event.value)"
         />
-        <image class="cart-item__image" :src="item.productImage" mode="aspectFill" />
+        <image
+          class="cart-item__image"
+          :src="item.productImage"
+          mode="aspectFill"
+          @click="openProduct(item)"
+        />
         <view class="cart-item__content">
-          <view class="cart-item__name">{{ item.productName }}</view>
-          <view class="cart-item__sku">{{ item.skuName }}</view>
-          <view v-if="item.invalid" class="cart-item__invalid">商品或规格已失效</view>
-          <view v-else-if="item.stock <= 0" class="cart-item__invalid">暂时缺货</view>
+          <view class="cart-item__info" @click="openProduct(item)">
+            <view class="cart-item__name">{{ item.productName }}</view>
+            <view class="cart-item__sku">{{ item.skuName }}</view>
+            <view v-if="item.invalid" class="cart-item__invalid">商品或规格已失效</view>
+            <view v-else-if="item.stock <= 0" class="cart-item__invalid">暂时缺货</view>
+          </view>
           <view class="cart-item__bottom">
             <text class="cart-item__price">{{ formatPrice(item.price, true) }}</text>
             <wd-input-number
@@ -108,6 +115,10 @@ function toCartLogin() {
 
 function goShopping() {
   navigate(RoutePath.PRODUCT);
+}
+
+function openProduct(item: CartItem) {
+  navigate(RoutePath.PRODUCT_DETAIL, { params: { id: item.productId } });
 }
 
 function handleChecked(item: CartItem, checked: boolean) {
@@ -181,6 +192,11 @@ onShow(() => {
 
   &--invalid {
     opacity: 0.7;
+  }
+
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+  :deep(.wd-checkbox) {
+    align-self: center;
   }
 
   &__image {

@@ -10,10 +10,7 @@
     />
     <view v-else class="product-card__cover product-card__cover--empty">悦己</view>
     <view class="product-card__body">
-      <view class="product-card__title-row">
-        <view class="product-card__name">{{ product.name }}</view>
-        <text v-if="product.tags[0]" class="product-card__tag">{{ product.tags[0] }}</text>
-      </view>
+      <view class="product-card__name">{{ product.name }}</view>
       <view v-if="product.subTitle" class="product-card__subtitle">{{ product.subTitle }}</view>
       <view class="product-card__meta">
         <text>已售{{ product.sales }}</text>
@@ -89,29 +86,13 @@ watch(
     margin-left: 22rpx;
   }
 
-  &__title-row {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-  }
-
   &__name {
-    flex: 1;
     min-width: 0;
     font-size: 30rpx;
     font-weight: 600;
     color: $color-text-title;
 
     @include ellipsis;
-  }
-
-  &__tag {
-    flex-shrink: 0;
-    padding: 2rpx 8rpx;
-    margin-left: 8rpx;
-    font-size: $font-size-xs;
-    color: $color-price;
-    background: rgb(255 107 53 / 10%);
   }
 
   &__subtitle {

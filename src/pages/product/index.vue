@@ -94,6 +94,9 @@
               <view v-if="group.sections.length > 1" class="product-catalog__section-title">
                 {{ section.name }} ({{ section.total }})
               </view>
+              <view v-if="section.products.length === 0" class="product-catalog__section-empty">
+                暂无商品
+              </view>
               <YjProductCard
                 v-for="product in section.products"
                 :key="product.id"
@@ -428,6 +431,15 @@ onBeforeUnmount(() => {
   &__section-title {
     padding: 24rpx 0 8rpx;
     font-size: 30rpx;
+  }
+
+  &__section-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180rpx;
+    font-size: $font-size-sm;
+    color: $color-text-placeholder;
   }
 
   &__status {
