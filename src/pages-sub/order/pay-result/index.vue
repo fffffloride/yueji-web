@@ -44,6 +44,7 @@
         >
           刷新支付结果
         </wd-button>
+        <wd-button v-if="groupId" type="primary" block @click="viewGroup"> 查看拼团进度 </wd-button>
         <wd-button type="primary" plain block @click="navigate(RoutePath.HOME)">
           返回首页
         </wd-button>
@@ -61,6 +62,7 @@ import { navigate } from "@/utils/navigate";
 const payment = ref<PaymentInfo>();
 const paymentNo = ref("");
 const orderNo = ref("");
+const groupId = ref("");
 const zeroAmountSuccess = ref(false);
 const loading = ref(false);
 const submitting = ref(false);
@@ -72,7 +74,9 @@ const state = computed(() => {
       tone: "success",
       symbol: "✓",
       title: "支付成功",
-      description: "订单已支付，请按订单安排到店服务",
+      description: groupId.value
+        ? "支付已完成，拼团结果请以团详情为准"
+        : "订单已支付，请按订单安排到店服务",
     };
   }
   if (payment.value?.status === PaymentStatusEnum.FAILED) {
@@ -127,9 +131,17 @@ async function confirmMock() {
   }
 }
 
+function viewGroup() {
+  navigate(RoutePath.GROUP_BUY_DETAIL, {
+    redirect: true,
+    params: { groupId: groupId.value },
+  });
+}
+
 onLoad((options) => {
   paymentNo.value = options?.paymentNo ?? "";
   orderNo.value = options?.orderNo ?? "";
+  groupId.value = options?.groupId ?? "";
   zeroAmountSuccess.value = options?.success === "1";
   if (paymentNo.value) void queryPayment();
   else if (!zeroAmountSuccess.value) queryError.value = "支付参数不完整";

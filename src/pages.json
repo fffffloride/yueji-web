@@ -186,7 +186,7 @@
         },
         {
           "path": "group-buy-detail/index",
-          "style": { "navigationBarTitleText": "拼团详情" }
+          "style": { "navigationBarTitleText": "拼团活动" }
         },
         {
           "path": "lottery/index",
