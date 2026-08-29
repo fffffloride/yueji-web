@@ -1,25 +1,30 @@
 import { request } from "@/utils/request";
-import type { PayStatusResult, WxPayParams } from "./types";
+import type { PaymentInfo } from "./types";
 
-const PAY_BASE_URL = "/pay";
+const PAYMENT_BASE_URL = "/app/payment";
 
 const PayAPI = {
-  /** 微信支付下单，返回调起支付所需参数。 */
-  wxpay(orderId: string) {
-    return request<WxPayParams>({
-      url: `${PAY_BASE_URL}/wxpay`,
+  create(orderId: string) {
+    return request<PaymentInfo, { orderId: string }>({
+      url: PAYMENT_BASE_URL,
       method: "POST",
       data: { orderId },
-      loading: "正在发起支付",
+      loading: "创建支付单中",
     });
   },
 
-  /** 查询支付状态，用于支付结果页轮询。 */
-  getStatus(orderNo: string) {
-    return request<PayStatusResult>({
-      url: `${PAY_BASE_URL}/status`,
-      params: { orderNo },
+  get(paymentNo: string) {
+    return request<PaymentInfo>({
+      url: `${PAYMENT_BASE_URL}/${paymentNo}`,
       skipErrorToast: true,
+    });
+  },
+
+  confirmMock(paymentNo: string) {
+    return request<PaymentInfo>({
+      url: `${PAYMENT_BASE_URL}/${paymentNo}/mock-confirm`,
+      method: "POST",
+      loading: "支付确认中",
     });
   },
 };

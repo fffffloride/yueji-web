@@ -8,6 +8,11 @@ export interface LoginRequest {
   inviterId?: string;
 }
 
+export interface MockLoginRequest {
+  openid?: string;
+  mobile?: string;
+}
+
 export interface LoginResult {
   tokenType: string;
   accessToken: string;

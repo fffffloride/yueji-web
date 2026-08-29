@@ -17,8 +17,11 @@ export const useUserStore = defineStore(
      * @param inviterId - 分享/分销场景带入的推荐人 ID。
      */
     async function login(inviterId?: string) {
-      const { code } = await uni.login({ provider: "weixin" });
-      const result = await UserAPI.login({ code, inviterId });
+      const result = import.meta.env.DEV
+        ? await UserAPI.mockLogin({ mobile: "13800138000" })
+        : await uni
+            .login({ provider: "weixin" })
+            .then(({ code }) => UserAPI.login({ code, inviterId }));
 
       // token 有效期由后端下发，本地缓存同步过期避免带着废 token 请求
       setAccessToken(result.accessToken, result.expiresIn * 1000);

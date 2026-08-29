@@ -1,22 +1,17 @@
-/** 微信支付下单返回，字段与 uni.requestPayment 入参对应。 */
-export interface WxPayParams {
-  timeStamp: string;
-  nonceStr: string;
-  /** 形如 prepay_id=xxx */
-  package: string;
-  signType: "MD5" | "HMAC-SHA256" | "RSA";
-  paySign: string;
+export enum PaymentStatusEnum {
+  PENDING = 0,
+  SUCCESS = 1,
+  FAILED = 2,
+  REFUNDED = 3,
 }
 
-export enum PayStatusEnum {
-  PENDING = "PENDING",
-  SUCCESS = "SUCCESS",
-  FAILED = "FAILED",
-  CLOSED = "CLOSED",
-}
-
-export interface PayStatusResult {
-  orderNo: string;
-  status: PayStatusEnum;
-  paidAt?: string;
+export interface PaymentInfo {
+  paymentNo: string;
+  orderId: string;
+  amount: number;
+  channel: string;
+  status: PaymentStatusEnum;
+  thirdPartyNo?: string | null;
+  paidTime?: string | null;
+  invokeParams?: Record<string, unknown> | null;
 }

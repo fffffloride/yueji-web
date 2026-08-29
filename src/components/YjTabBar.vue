@@ -23,6 +23,7 @@
 <script setup lang="ts">
 import { RoutePath, TAB_BAR_PATHS } from "@/constants";
 import { useCartStore } from "@/stores/cart";
+import { isLoggedIn } from "@/utils/auth";
 
 interface TabItem {
   /** wd-icon 内置图标名 */
@@ -61,5 +62,6 @@ function handleChange({ value }: { value: number }) {
 // hideTabBar 是全局且持久的，首个 TabBar 页面挂载时隐藏一次即可。
 onMounted(() => {
   uni.hideTabBar({ animation: false, fail: () => undefined });
+  if (isLoggedIn()) void cartStore.fetch(true);
 });
 </script>

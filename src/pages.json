@@ -59,7 +59,7 @@
         },
         {
           "path": "detail/index",
-          "style": { "navigationBarTitleText": "商品详情" }
+          "style": { "navigationBarTitleText": "商品详情", "navigationStyle": "custom" }
         }
       ]
     },
