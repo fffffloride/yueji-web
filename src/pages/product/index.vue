@@ -1,5 +1,16 @@
 <template>
   <YjPage class="product-catalog-page" :tabbar="RoutePath.PRODUCT" :padded="false">
+    <view class="product-nav" :style="{ paddingTop: `${statusBarHeight}px` }">
+      <text>产品</text>
+    </view>
+
+    <view class="product-search-entry-wrap">
+      <view class="product-search-entry" @click="openSearchDrawer">
+        <wd-icon name="search" size="34rpx" color="#b7b7b7" />
+        <text>搜项目</text>
+      </view>
+    </view>
+
     <view class="product-catalog">
       <scroll-view
         class="product-catalog__sidebar"
@@ -44,9 +55,7 @@
           <view v-if="loading && !loaded" class="product-catalog__status">加载中…</view>
           <view v-else-if="loadError" class="product-catalog__status">
             <text>{{ loadError }}</text>
-            <wd-button size="small" type="primary" @click="loadCatalog">
-              重新加载
-            </wd-button>
+            <wd-button size="small" type="primary" @click="loadCatalog"> 重新加载 </wd-button>
           </view>
           <YjEmpty
             v-else-if="catalog.groups.length === 0"
@@ -107,13 +116,87 @@
         </scroll-view>
       </view>
     </view>
+
+    <wd-popup
+      v-model="searchDrawerVisible"
+      position="right"
+      root-portal
+      :modal="false"
+      :z-index="1000"
+      :close-on-click-modal="false"
+      custom-style="width: 100vw; height: 100vh; overflow: hidden; background: #fff;"
+    >
+      <view class="search-drawer" :style="{ paddingTop: `${statusBarHeight}px` }">
+        <view class="search-drawer__nav">
+          <view class="search-drawer__back" @click="closeSearchDrawer">
+            <wd-icon name="arrow-left" size="44rpx" />
+          </view>
+          <text>搜索</text>
+        </view>
+
+        <wd-search
+          v-model="searchKeyword"
+          placeholder="搜项目"
+          cancel-txt="搜索"
+          placeholder-left
+          :focus="searchDrawerVisible"
+          @change="handleSearchChange"
+          @search="handleSearch"
+          @cancel="handleSearch"
+          @clear="resetSearchResults"
+        />
+
+        <scroll-view
+          class="search-drawer__content"
+          scroll-y
+          :show-scrollbar="false"
+          :lower-threshold="80"
+          @scrolltolower="loadMoreSearchResults"
+        >
+          <view v-if="!searchSearched && searchHistory.length" class="search-history">
+            <view class="search-history__header">
+              <text>历史记录</text>
+              <wd-icon name="delete" size="32rpx" color="#999" @click="clearSearchHistory" />
+            </view>
+            <view class="search-history__tags">
+              <view
+                v-for="word in searchHistory"
+                :key="word"
+                class="search-history__tag"
+                @click="searchHistoryWord(word)"
+              >
+                {{ word }}
+              </view>
+            </view>
+          </view>
+
+          <template v-if="searchSearched">
+            <view v-if="searchLoading && searchProducts.length === 0" class="search-status">
+              <wd-loading />
+              <text>搜索中…</text>
+            </view>
+            <YjProductCard v-for="product in searchProducts" :key="product.id" :product="product" />
+            <YjEmpty
+              v-if="!searchLoading && searchProducts.length === 0"
+              image="search"
+              text="没有找到相关商品"
+            />
+            <view v-else-if="searchFinished && searchProducts.length > 0" class="search-end">
+              没有更多了
+            </view>
+          </template>
+        </scroll-view>
+      </view>
+    </wd-popup>
   </YjPage>
 </template>
 
 <script setup lang="ts">
+import { onBackPress } from "@dcloudio/uni-app";
 import ProductAPI, {
   type ProductCatalog,
   type ProductCatalogGroup,
+  type ProductItem,
 } from "@/api/product";
 import { RoutePath } from "@/constants";
 import {
@@ -132,6 +215,10 @@ interface ElementRect {
   top: number;
 }
 
+const SEARCH_HISTORY_KEY = "yj:product:search-history";
+const SEARCH_HISTORY_LIMIT = 10;
+const SEARCH_PAGE_SIZE = 10;
+
 const catalog = ref<ProductCatalog>({ groups: [] });
 const fullCatalog = ref<ProductCatalog>({ groups: [] });
 const painFriendly = ref(false);
@@ -149,15 +236,25 @@ const currentScrollTop = ref(0);
 const currentScrollHeight = ref(0);
 const listViewportHeight = ref(0);
 const instance = getCurrentInstance();
+const statusBarHeight = uni.getSystemInfoSync().statusBarHeight ?? 0;
+const searchDrawerVisible = ref(false);
+const searchKeyword = ref("");
+const submittedKeyword = ref("");
+const searchSearched = ref(false);
+const searchHistory = ref<string[]>(uni.getStorageSync(SEARCH_HISTORY_KEY) || []);
+const searchProducts = ref<ProductItem[]>([]);
+const searchLoading = ref(false);
+const searchFinished = ref(false);
+const searchPageNum = ref(1);
 
 let jumping = false;
 let jumpTimer: ReturnType<typeof setTimeout> | undefined;
+let searchRequestSequence = 0;
 
 const groupDomId = (id: string) => `catalog-group-${id}`;
 const sectionDomId = (id: string) => `catalog-section-${id}`;
 const leftDomId = (id: string) => `catalog-left-${id}`;
-const tabDomId = (groupId: string, sectionId: string) =>
-  `catalog-tab-${groupId}-${sectionId}`;
+const tabDomId = (groupId: string, sectionId: string) => `catalog-tab-${groupId}-${sectionId}`;
 
 function revealLeft(id: string): void {
   leftScrollIntoView.value = "";
@@ -308,8 +405,100 @@ function handlePainFriendlyChange({ value }: { value: boolean }): void {
   applyPainFriendlyFilter(Boolean(value));
 }
 
+function resetSearchResults(): void {
+  searchRequestSequence += 1;
+  submittedKeyword.value = "";
+  searchSearched.value = false;
+  searchProducts.value = [];
+  searchLoading.value = false;
+  searchFinished.value = false;
+  searchPageNum.value = 1;
+}
+
+function openSearchDrawer(): void {
+  searchKeyword.value = "";
+  resetSearchResults();
+  searchDrawerVisible.value = true;
+}
+
+function closeSearchDrawer(): void {
+  searchDrawerVisible.value = false;
+  resetSearchResults();
+}
+
+function saveSearchHistory(word: string): void {
+  searchHistory.value = [word, ...searchHistory.value.filter((item) => item !== word)].slice(
+    0,
+    SEARCH_HISTORY_LIMIT
+  );
+  uni.setStorageSync(SEARCH_HISTORY_KEY, searchHistory.value);
+}
+
+function clearSearchHistory(): void {
+  searchHistory.value = [];
+  uni.removeStorageSync(SEARCH_HISTORY_KEY);
+}
+
+async function fetchSearchProducts(reset = false): Promise<void> {
+  if (!reset && (searchLoading.value || searchFinished.value)) return;
+  const sequence = reset ? ++searchRequestSequence : searchRequestSequence;
+  if (reset) {
+    searchPageNum.value = 1;
+    searchProducts.value = [];
+    searchFinished.value = false;
+  }
+
+  searchLoading.value = true;
+  const requestedPage = searchPageNum.value;
+  try {
+    const result = await ProductAPI.search({
+      pageNum: requestedPage,
+      pageSize: SEARCH_PAGE_SIZE,
+      keyword: submittedKeyword.value,
+    });
+    if (sequence !== searchRequestSequence) return;
+    searchProducts.value = [...searchProducts.value, ...result.list];
+    searchFinished.value = searchProducts.value.length >= result.total;
+    searchPageNum.value = requestedPage + 1;
+  } finally {
+    if (sequence === searchRequestSequence) searchLoading.value = false;
+  }
+}
+
+function handleSearch(): void {
+  const word = searchKeyword.value.trim();
+  if (!word) {
+    resetSearchResults();
+    return;
+  }
+  searchKeyword.value = word;
+  submittedKeyword.value = word;
+  saveSearchHistory(word);
+  searchSearched.value = true;
+  void fetchSearchProducts(true);
+}
+
+function handleSearchChange({ value }: { value: string }): void {
+  if (searchSearched.value && value.trim() !== submittedKeyword.value) resetSearchResults();
+}
+
+function searchHistoryWord(word: string): void {
+  searchKeyword.value = word;
+  handleSearch();
+}
+
+function loadMoreSearchResults(): void {
+  if (searchSearched.value) void fetchSearchProducts();
+}
+
 onLoad(() => {
   loadCatalog();
+});
+
+onBackPress(() => {
+  if (!searchDrawerVisible.value) return false;
+  closeSearchDrawer();
+  return true;
 });
 
 onBeforeUnmount(() => {
@@ -325,15 +514,54 @@ onBeforeUnmount(() => {
 
   /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
   :deep(.page__body) {
+    display: flex;
+    flex-direction: column;
     min-height: 0;
     padding-top: 0;
     overflow: hidden;
+    background: $color-bg;
+  }
+}
+
+.product-nav,
+.search-drawer__nav {
+  position: relative;
+  box-sizing: content-box;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: $color-text-title;
+  background: $color-bg;
+}
+
+.product-search-entry-wrap {
+  flex-shrink: 0;
+  padding: 16rpx 24rpx;
+  background: $color-bg;
+}
+
+.product-search-entry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 64rpx;
+  font-size: 28rpx;
+  color: $color-text-placeholder;
+  background: $color-bg-page;
+
+  text {
+    margin-left: 10rpx;
   }
 }
 
 .product-catalog {
   display: flex;
-  height: 100%;
+  flex: 1;
   min-height: 0;
   background: $color-bg;
 
@@ -452,5 +680,76 @@ onBeforeUnmount(() => {
     font-size: $font-size-sm;
     color: $color-text-sub;
   }
+}
+
+.search-drawer {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: $color-bg;
+
+  &__back {
+    position: absolute;
+    left: 24rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64rpx;
+    height: 64rpx;
+  }
+
+  &__content {
+    box-sizing: border-box;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    padding: 0 32rpx env(safe-area-inset-bottom);
+  }
+}
+
+.search-history {
+  padding-top: 32rpx;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 30rpx;
+    font-weight: 600;
+    color: $color-text-title;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 24rpx;
+  }
+
+  &__tag {
+    padding: 12rpx 28rpx;
+    margin: 0 16rpx 16rpx 0;
+    font-size: 25rpx;
+    color: $color-text-content;
+    background: $color-bg-page;
+    border-radius: 32rpx;
+  }
+}
+
+.search-status {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+  justify-content: center;
+  min-height: 360rpx;
+  color: $color-text-sub;
+}
+
+.search-end {
+  padding: 24rpx 0;
+  font-size: $font-size-sm;
+  color: $color-text-placeholder;
+  text-align: center;
 }
 </style>
