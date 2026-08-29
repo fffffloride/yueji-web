@@ -7,7 +7,6 @@ export const RoutePath = {
   MINE: "/pages/mine/index",
   LOGIN: "/pages/login/index",
 
-  PRODUCT_SEARCH: "/pages-sub/product/search/index",
   PRODUCT_LIST: "/pages-sub/product/list/index",
   PRODUCT_DETAIL: "/pages-sub/product/detail/index",
 

@@ -20,9 +20,9 @@ export function filterPainFriendlyCatalog(
             const products = section.products.filter((product) => product.painFriendly);
             return { ...section, total: products.length, products };
           })
-          .filter((section) => section.total > 0),
+          .filter((section) => group.fixed || section.total > 0),
       }))
-      .filter((group) => group.sections.length > 0),
+      .filter((group) => group.fixed || group.sections.length > 0),
   };
 }
 

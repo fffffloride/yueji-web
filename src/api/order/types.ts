@@ -1,75 +1,86 @@
-import type { OrderStatusEnum } from "@/enums";
 import type { BaseQueryParams } from "../common";
 
-/** 下单商品项。 */
-export interface OrderItemForm {
-  productId: string;
+export interface OrderCreateItem {
   skuId: string;
   quantity: number;
 }
 
-/** 创建订单入参，对应需求 3.5.1 订单确认。 */
+/** 创建订单与试算共用入参。 */
 export interface OrderForm {
-  items: OrderItemForm[];
-  /** 联系人姓名 */
-  contactName: string;
-  contactPhone: string;
-  /** 到店时间 */
-  arrivalTime?: string;
-  couponId?: string;
-  /** 使用的积分数量 */
-  usedPoints?: number;
+  cartIds?: string[];
+  items?: OrderCreateItem[];
+  memberCouponId?: string;
+  pointsToUse?: number;
+  contactName?: string;
+  contactMobile?: string;
   remark?: string;
 }
 
-export interface OrderCreateResult {
-  orderId: string;
-  orderNo: string;
-  /** 应付金额（分） */
+export interface OrderQuote {
+  totalAmount: number;
+  memberLevelId: string | null;
+  memberLevelName: string | null;
+  memberDiscount: number;
+  memberCouponId: string | null;
+  couponName: string | null;
+  couponAmount: number;
+  pointsUsed: number;
+  pointsDeduct: number;
+  maxUsablePoints: number;
+  discountAmount: number;
   payAmount: number;
 }
 
-/** 订单中的商品快照。 */
+export interface AvailableCoupon {
+  memberCouponId: string;
+  couponId: string;
+  couponName: string | null;
+  couponType: "FULL_REDUCTION" | "DISCOUNT" | "EXCHANGE" | null;
+  couponAmount: number;
+  thresholdAmount: number;
+  validEnd: string | null;
+}
+
 export interface OrderProduct {
+  id: string;
   productId: string;
   skuId: string;
-  name: string;
+  productName: string;
+  productImage?: string | null;
   skuName: string;
-  cover: string;
   price: number;
   quantity: number;
+  subtotal: number;
 }
 
-/** 订单列表项。 */
-export interface OrderItem {
+export interface OrderDetail {
   id: string;
   orderNo: string;
-  status: OrderStatusEnum;
-  /** 实付金额（分） */
+  status: number;
+  statusLabel: string;
+  totalAmount: number;
+  discountAmount: number;
   payAmount: number;
-  createdAt: string;
-  products: OrderProduct[];
+  createTime: string;
+  contactName?: string | null;
+  contactMobile?: string | null;
+  remark?: string | null;
+  items: OrderProduct[];
+  pricing: OrderQuote;
 }
 
-/** 订单详情。 */
-export interface OrderDetail extends OrderItem {
-  contactName: string;
-  contactPhone: string;
-  arrivalTime?: string;
-  remark?: string;
-  /** 商品总额（分） */
+export interface OrderListItem {
+  id: string;
+  orderNo: string;
+  status: number;
+  statusLabel: string;
   totalAmount: number;
-  /** 优惠金额（分） */
   discountAmount: number;
-  /** 积分抵扣金额（分） */
-  pointsAmount: number;
-  paidAt?: string;
-  /** 核销时间 */
-  verifiedAt?: string;
-  /** 核销人 */
-  verifiedBy?: string;
+  payAmount: number;
+  createTime: string;
+  items: OrderProduct[];
 }
 
 export interface OrderQueryParams extends BaseQueryParams {
-  status?: OrderStatusEnum | "";
+  status?: number;
 }

@@ -1,5 +1,12 @@
 import { request } from "@/utils/request";
-import type { LoginRequest, LoginResult, MemberProfile, UserForm, UserInfo } from "./types";
+import type {
+  LoginRequest,
+  LoginResult,
+  MemberProfile,
+  MockLoginRequest,
+  UserForm,
+  UserInfo,
+} from "./types";
 
 const AUTH_BASE_URL = "/app/auth";
 const MEMBER_BASE_URL = "/app/member";
@@ -20,6 +27,16 @@ const UserAPI = {
       url: `${AUTH_BASE_URL}/silent-login`,
       method: "POST",
       data: { code: data.code },
+      skipAuth: true,
+    });
+  },
+
+  /** 本地联调登录，服务端只在非生产环境开放。 */
+  mockLogin(data: MockLoginRequest = {}) {
+    return request<LoginResult, MockLoginRequest>({
+      url: `${AUTH_BASE_URL}/mock-login`,
+      method: "POST",
+      data,
       skipAuth: true,
     });
   },

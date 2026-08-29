@@ -11,7 +11,11 @@
       <slot />
     </view>
 
-    <view v-if="$slots.footer" class="page__footer">
+    <view
+      v-if="$slots.footer"
+      class="page__footer"
+      :class="{ 'page__footer--with-tabbar': !!tabbar }"
+    >
       <slot name="footer" />
     </view>
 
@@ -38,5 +42,13 @@ withDefaults(
 .page__body--no-padding {
   padding-right: 0;
   padding-left: 0;
+}
+
+.page__body--with-footer.page__body--with-tabbar {
+  padding-bottom: calc(#{$height-button} + #{$height-tabbar} + #{$spacing-lg});
+}
+
+.page__footer--with-tabbar {
+  bottom: $height-tabbar;
 }
 </style>
