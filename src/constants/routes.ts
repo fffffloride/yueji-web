@@ -2,6 +2,7 @@
 export const RoutePath = {
   HOME: "/pages/home/index",
   PRODUCT: "/pages/product/index",
+  COUPON: "/pages/coupon/index",
   APPOINTMENT: "/pages/appointment/index",
   CART: "/pages/cart/index",
   MINE: "/pages/mine/index",
@@ -59,7 +60,6 @@ export const RoutePath = {
 export const TAB_BAR_PATHS: string[] = [
   RoutePath.HOME,
   RoutePath.PRODUCT,
-  RoutePath.APPOINTMENT,
-  RoutePath.CART,
+  RoutePath.COUPON,
   RoutePath.MINE,
 ];

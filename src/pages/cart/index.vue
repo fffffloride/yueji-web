@@ -1,5 +1,5 @@
 <template>
-  <YjPage :tabbar="RoutePath.CART">
+  <YjPage has-footer>
     <YjPlaceholder
       title="购物车"
       section="3.4"
@@ -31,7 +31,6 @@
 </template>
 
 <script setup lang="ts">
-import { RoutePath } from "@/constants";
 import { useCartStore } from "@/stores/cart";
 import { formatPrice } from "@/utils/format";
 
