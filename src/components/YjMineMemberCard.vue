@@ -34,7 +34,7 @@
     <!-- 会员卡 -->
     <view class="mine-member__card">
       <view class="mine-member__profile" @click="handleProfileClick">
-        <view class="mine-member__nickname">{{ loggedIn ? `Hi,${nickname}` : "Hi，请登录" }}</view>
+        <view class="mine-member__nickname">{{ loggedIn ? `Hi，${nickname}` : "Hi，请登录" }}</view>
         <view class="mine-member__welcome">welcome back</view>
       </view>
 
@@ -181,6 +181,7 @@ function handleProfileClick() {
 }
 
 .mine-member__action-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,6 +191,13 @@ function handleProfileClick() {
   background: rgb(255 255 255 / 80%);
   border-radius: 50%;
   box-shadow: 0 2rpx 8rpx rgb(0 0 0 / 6%);
+}
+
+// 视觉保持 56rpx，点击区扩到 88rpx（小程序点击舒适最小值）
+.mine-member__action-btn::after {
+  position: absolute;
+  inset: -16rpx;
+  content: "";
 }
 
 .mine-member__card {

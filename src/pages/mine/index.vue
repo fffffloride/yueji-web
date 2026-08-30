@@ -129,6 +129,8 @@ async function handleLogout() {
     msg: "确定要退出当前账号吗？",
     confirmButtonText: "退出",
     cancelButtonText: "取消",
+    // wd-message-box 默认 z-index 99，低于自定义 TabBar 的 500，需显式抬高
+    zIndex: 600,
   });
   if (result.action === "confirm") {
     userStore.logout();
