@@ -1,0 +1,11 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="核销有礼"
+      :points="[
+        '到店核销流程',
+        '核销奖励领取',
+      ]"
+    />
+  </YjPage>
+</template>

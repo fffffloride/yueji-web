@@ -1,0 +1,11 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="病历签署"
+      :points="[
+        '查看历史病历',
+        '在线签署病历授权',
+      ]"
+    />
+  </YjPage>
+</template>

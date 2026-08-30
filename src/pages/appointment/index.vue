@@ -1,5 +1,5 @@
 <template>
-  <YjPage :tabbar="RoutePath.APPOINTMENT">
+  <YjPage>
     <YjPlaceholder
       title="预约"
       section="3.8"
@@ -12,7 +12,3 @@
     />
   </YjPage>
 </template>
-
-<script setup lang="ts">
-import { RoutePath } from "@/constants";
-</script>

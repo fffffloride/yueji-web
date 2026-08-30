@@ -22,6 +22,12 @@
       }
     },
     {
+      "path": "pages/coupon/index",
+      "style": {
+        "navigationBarTitleText": "券包"
+      }
+    },
+    {
       "path": "pages/appointment/index",
       "style": {
         "navigationBarTitleText": "预约"
@@ -152,6 +158,22 @@
         {
           "path": "help/index",
           "style": { "navigationBarTitleText": "帮助与客服" }
+        },
+        {
+          "path": "gift-card/index",
+          "style": { "navigationBarTitleText": "礼品卡" }
+        },
+        {
+          "path": "medical-record/index",
+          "style": { "navigationBarTitleText": "病历签署" }
+        },
+        {
+          "path": "community/index",
+          "style": { "navigationBarTitleText": "悦己圈" }
+        },
+        {
+          "path": "verify-gift/index",
+          "style": { "navigationBarTitleText": "核销有礼" }
         }
       ]
     },
@@ -246,9 +268,8 @@
     "borderStyle": "white",
     "list": [
       { "pagePath": "pages/home/index", "text": "首页" },
-      { "pagePath": "pages/product/index", "text": "产品" },
-      { "pagePath": "pages/appointment/index", "text": "预约" },
-      { "pagePath": "pages/cart/index", "text": "购物车" },
+      { "pagePath": "pages/product/index", "text": "项目" },
+      { "pagePath": "pages/coupon/index", "text": "券包" },
       { "pagePath": "pages/mine/index", "text": "我的" }
     ]
   },

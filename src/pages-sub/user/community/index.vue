@@ -1,0 +1,11 @@
+<template>
+  <YjPage>
+    <YjPlaceholder
+      title="悦己圈"
+      :points="[
+        '社区动态浏览',
+        '发布与互动',
+      ]"
+    />
+  </YjPage>
+</template>
