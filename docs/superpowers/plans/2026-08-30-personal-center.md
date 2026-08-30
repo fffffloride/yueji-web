@@ -510,7 +510,12 @@ const bubbles: BubbleStyle[] = [
 
 /** 未登录点昵称区走登录，已登录进会员中心。 */
 function handleProfileClick() {
-  emit(props.loggedIn ? "member" : "login");
+  // 注意：emit(三元表达式) 会因联合类型不匹配重载而 TS2769，须写成分支
+  if (props.loggedIn) {
+    emit("member");
+  } else {
+    emit("login");
+  }
 }
 </script>
 
