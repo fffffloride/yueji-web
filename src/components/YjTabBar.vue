@@ -1,8 +1,8 @@
 <template>
   <wd-tabbar
     :model-value="activeIndex"
-    fixed
-    placeholder
+    :fixed="true"
+    :placeholder="true"
     safe-area-inset-bottom
     active-color="#2D5A3D"
     inactive-color="#999999"
@@ -14,12 +14,16 @@
       :name="index"
       :title="tab.title"
       :icon="tab.icon"
+      :value="index === 3 && cartStore.totalCount > 0 ? cartStore.totalCount : null"
+      :max="99"
     />
   </wd-tabbar>
 </template>
 
 <script setup lang="ts">
 import { RoutePath, TAB_BAR_PATHS } from "@/constants";
+import { useCartStore } from "@/stores/cart";
+import { isLoggedIn } from "@/utils/auth";
 
 interface TabItem {
   /** wd-icon 内置图标名 */
@@ -33,10 +37,13 @@ const props = defineProps<{
   current: string;
 }>();
 
+const cartStore = useCartStore();
+
 const tabs: TabItem[] = [
   { icon: "home", title: "首页", path: RoutePath.HOME },
-  { icon: "bags", title: "项目", path: RoutePath.PRODUCT },
-  { icon: "gift", title: "券包", path: RoutePath.COUPON },
+  { icon: "goods", title: "产品", path: RoutePath.PRODUCT },
+  { icon: "calendar", title: "预约", path: RoutePath.APPOINTMENT },
+  { icon: "cart", title: "购物车", path: RoutePath.CART },
   { icon: "user", title: "我的", path: RoutePath.MINE },
 ];
 
@@ -55,5 +62,6 @@ function handleChange({ value }: { value: number }) {
 // hideTabBar 是全局且持久的，首个 TabBar 页面挂载时隐藏一次即可。
 onMounted(() => {
   uni.hideTabBar({ animation: false, fail: () => undefined });
+  if (isLoggedIn()) void cartStore.fetch(true);
 });
 </script>

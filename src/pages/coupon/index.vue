@@ -1,5 +1,5 @@
 <template>
-  <YjPage :tabbar="RoutePath.COUPON">
+  <YjPage>
     <YjPlaceholder
       title="券包"
       section="3.7"
@@ -31,8 +31,6 @@
 </template>
 
 <script setup lang="ts">
-import { RoutePath } from "@/constants";
-
 /** 券包骨架阶段使用静态示例数据，后续替换为优惠券接口。 */
 const coupons = [
   {

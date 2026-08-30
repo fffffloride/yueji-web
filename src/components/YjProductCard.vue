@@ -1,149 +1,148 @@
 <template>
-  <view class="yj-product" @click="emit('click')">
-    <view class="yj-product__thumb">
-      <view class="yj-product__thumb-bar" />
-    </view>
-    <view class="yj-product__info">
-      <view class="yj-product__head">
-        <text class="yj-product__name">{{ product.name }}</text>
-        <text v-if="product.badge" class="yj-product__badge">{{ product.badge }}</text>
+  <view class="product-card" @click="handleClick">
+    <image
+      v-if="product.cover && !imageFailed"
+      class="product-card__cover"
+      :src="product.cover"
+      mode="aspectFill"
+      lazy-load
+      @error="imageFailed = true"
+    />
+    <view v-else class="product-card__cover product-card__cover--empty">悦己</view>
+    <view class="product-card__body">
+      <view class="product-card__name">{{ product.name }}</view>
+      <view v-if="product.subTitle" class="product-card__subtitle">{{ product.subTitle }}</view>
+      <view class="product-card__meta">
+        <text>已售{{ product.sales }}</text>
+        <text v-if="product.painFriendly" class="product-card__friendly">♥ 疼痛友好</text>
       </view>
-      <text class="yj-product__sub">{{ product.sub }}</text>
-      <view v-if="product.sold" class="yj-product__meta">
-        <text>{{ product.sold }}</text>
-        <template v-if="product.isFriendly">
-          <wd-icon name="heart" size="22rpx" color="var(--yj-color-primary)" />
-          <text class="yj-product__friendly">疼痛友好</text>
-        </template>
-      </view>
-      <view class="yj-product__price">
-        <text class="yj-product__current">{{ formatPrice(product.price, true) }}</text>
-        <text class="yj-product__suffix">起</text>
-        <text class="yj-product__discount">{{ product.discount }}</text>
+      <view class="product-card__bottom">
+        <view class="product-card__price">
+          <text class="product-card__price-now">{{ compactPrice(product.price) }}</text>
+          <text class="product-card__price-suffix">起</text>
+        </view>
+        <text v-if="discount > 0" class="product-card__discount">
+          优惠{{ compactPrice(discount, false) }}
+        </text>
       </view>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import type { ProjectItem } from "@/mocks/project";
+import type { ProductItem } from "@/api/product";
+import { RoutePath } from "@/constants";
 import { formatPrice } from "@/utils/format";
+import { navigate } from "@/utils/navigate";
 
-/** 商品卡：缩略占位图 + 名称/标签/销量/价格，项目页与推荐位共用。 */
-defineProps<{
-  product: ProjectItem;
-}>();
+const props = defineProps<{ product: ProductItem }>();
+const imageFailed = ref(false);
+const discount = computed(() => Math.max(0, props.product.originalPrice - props.product.price));
 
-const emit = defineEmits<{
-  (e: "click"): void;
-}>();
+function compactPrice(cents: number, withSymbol = true): string {
+  return formatPrice(cents, withSymbol).replace(/\.00$/, "");
+}
+
+function handleClick(): void {
+  navigate(RoutePath.PRODUCT_DETAIL, { params: { id: props.product.id } });
+}
+
+watch(
+  () => props.product.cover,
+  () => {
+    imageFailed.value = false;
+  }
+);
 </script>
 
 <style lang="scss" scoped>
-.yj-product {
+.product-card {
   display: flex;
-  gap: $spacing-md;
-  padding: $spacing-md 0;
+  padding: 16rpx 0;
+  margin-bottom: 12rpx;
+  background: #fff;
 
-  &:not(:last-child) {
-    @include hairline(bottom);
+  &__cover {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 200rpx;
+    height: 180rpx;
+    font-size: $font-size-sm;
+    color: $color-text-placeholder;
+    background: $color-bg-page;
+
+    &--empty {
+      letter-spacing: 4rpx;
+    }
   }
-}
 
-.yj-product__thumb {
-  position: relative;
-  flex-shrink: 0;
-  width: 180rpx;
-  height: 180rpx;
-  overflow: hidden;
-  background: linear-gradient(135deg, $color-primary-tint, $color-surface-warm);
-  border-radius: 24rpx;
-}
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    margin-left: 22rpx;
+  }
 
-.yj-product__thumb-bar {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 6rpx;
-  background-color: $color-primary;
-}
+  &__name {
+    min-width: 0;
+    font-size: 30rpx;
+    font-weight: 600;
+    color: $color-text-title;
 
-.yj-product__info {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  justify-content: space-between;
-  min-width: 0;
-  padding: 2rpx 0;
-}
+    @include ellipsis;
+  }
 
-.yj-product__head {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-xs;
-  align-items: center;
-}
+  &__subtitle {
+    margin-top: 8rpx;
+    font-size: 25rpx;
+    color: $color-primary;
 
-.yj-product__name {
-  font-size: $font-size-md;
-  font-weight: bold;
-  color: $color-text-title;
-}
+    @include ellipsis;
+  }
 
-.yj-product__badge {
-  padding: 2rpx 10rpx;
-  font-size: 18rpx;
-  font-weight: bold;
-  color: $color-bg;
-  background-color: $color-primary;
-  border-radius: 6rpx;
-}
+  &__meta {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    margin-top: 8rpx;
+    font-size: $font-size-sm;
+    color: $color-text-sub;
+  }
 
-.yj-product__sub {
-  margin-top: 2rpx;
-  font-size: $font-size-sm;
-  color: $color-text-sub;
+  &__friendly {
+    padding: 2rpx 8rpx;
+    margin-left: 12rpx;
+    color: $color-primary;
+    background: rgb(45 90 61 / 8%);
+  }
 
-  @include ellipsis;
-}
+  &__bottom {
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+  }
 
-.yj-product__meta {
-  display: flex;
-  gap: $spacing-xs;
-  align-items: center;
-  margin-top: 2rpx;
-  font-size: $font-size-xs;
-  color: $color-text-placeholder;
-}
+  &__price-now {
+    font-size: 36rpx;
+    font-weight: 600;
+    color: $color-primary-light;
+  }
 
-.yj-product__friendly {
-  color: $color-primary;
-}
+  &__price-suffix {
+    margin-left: 4rpx;
+    font-size: $font-size-xs;
+    color: $color-primary-light;
+  }
 
-.yj-product__price {
-  display: flex;
-  gap: $spacing-sm;
-  align-items: center;
-}
-
-.yj-product__current {
-  font-size: $font-size-lg;
-  font-weight: bold;
-  color: $color-text-title;
-}
-
-.yj-product__suffix {
-  font-size: $font-size-xs;
-  color: $color-text-placeholder;
-}
-
-.yj-product__discount {
-  padding: 2rpx 12rpx;
-  font-size: $font-size-xs;
-  font-weight: 600;
-  color: $color-bg;
-  background-color: $color-primary;
-  border-radius: 20rpx;
+  &__discount {
+    padding: 4rpx 8rpx;
+    margin-left: 14rpx;
+    font-size: $font-size-sm;
+    color: $color-primary-light;
+    border: 2rpx solid $color-primary-lighter;
+  }
 }
 </style>

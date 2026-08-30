@@ -8,7 +8,6 @@ export const RoutePath = {
   MINE: "/pages/mine/index",
   LOGIN: "/pages/login/index",
 
-  PRODUCT_SEARCH: "/pages-sub/product/search/index",
   PRODUCT_LIST: "/pages-sub/product/list/index",
   PRODUCT_DETAIL: "/pages-sub/product/detail/index",
 
@@ -64,6 +63,7 @@ export const RoutePath = {
 export const TAB_BAR_PATHS: string[] = [
   RoutePath.HOME,
   RoutePath.PRODUCT,
-  RoutePath.COUPON,
+  RoutePath.APPOINTMENT,
+  RoutePath.CART,
   RoutePath.MINE,
 ];

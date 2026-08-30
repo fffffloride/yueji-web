@@ -1,420 +1,524 @@
 <template>
-  <YjPage has-footer>
-    <!-- 效果图展示区 -->
-    <view class="detail-photos">
-      <view v-for="index in 3" :key="index" class="detail-photos__item" />
-    </view>
-    <view class="detail-photo-caption">
-      <view class="detail-photo-caption__store">{{ detailPhotoCaption.store }}</view>
-      <view class="detail-photo-caption__meta">{{ detailPhotoCaption.meta }}</view>
-    </view>
-
-    <!-- 问答 -->
-    <view class="detail-qa card">
-      <view class="detail-qa__head">
-        <wd-icon name="chat" size="32rpx" color="var(--yj-color-primary)" />
-        <text class="detail-qa__title">问答</text>
-        <text class="detail-qa__name">{{ productName }}</text>
-        <view class="detail-qa__official">
-          <wd-icon name="check-bold" size="18rpx" color="var(--yj-color-primary)" />
-          <text>官方</text>
-        </view>
-      </view>
-
-      <!-- 治疗数据四宫格 -->
-      <view class="detail-qa__stats">
-        <view v-for="(stat, index) in treatmentStats" :key="stat.label" class="detail-qa__stat">
-          <text class="detail-qa__stat-label">{{ stat.label }}</text>
-          <text class="detail-qa__stat-value">{{ stat.value }}</text>
-          <view v-if="index > 0" class="detail-qa__stat-divider" />
-        </view>
-      </view>
-
-      <!-- 品项介绍摘要 -->
-      <view class="detail-qa__intro">
-        <view class="detail-qa__intro-title">【{{ productName }}】品项介绍</view>
-        <view class="detail-qa__intro-text">{{ introText(productName) }}</view>
-      </view>
-      <view class="detail-qa__more" @click="handleComingSoon">
-        查看更多<wd-icon name="arrow-right" size="24rpx" />
+  <YjPage :padded="false" :has-footer="!!product">
+    <view class="detail-nav" :style="{ paddingTop: `${statusBarHeight}px` }">
+      <view class="detail-nav__back" @click="goBack()">
+        <wd-icon name="arrow-left" size="44rpx" />
       </view>
     </view>
 
-    <!-- 详情胶囊 Tab -->
-    <view class="detail-tabs card">
-      <YjCapsuleTab v-model="activeDetailTab" :tabs="detailTabs" />
+    <view v-if="loading" class="detail-status">
+      <wd-loading />
+      <text>正在加载项目</text>
     </view>
 
-    <!-- Tab 内容 -->
-    <view class="detail-content card">
-      <template v-if="activeDetailTab === 0">
-        <view class="detail-content__section-title">· 品项介绍</view>
-        <view class="detail-content__block">
-          <view class="detail-content__block-title"><YjQTag />【{{ productName }}】品项介绍</view>
-          <view class="detail-content__text">{{ introText(productName) }}</view>
-        </view>
-        <view class="detail-content__section-title">· 品项亮点</view>
-        <view class="detail-content__block">
-          <view class="detail-content__block-title"><YjQTag />【{{ productName }}】亮点优势</view>
-          <view
-            v-for="(line, index) in highlightText(productName)"
-            :key="index"
-            class="detail-content__text"
-            :class="{ 'detail-content__text--bold': index === 0 }"
-          >
-            {{ line }}
+    <view v-else-if="loadError || !product" class="detail-status">
+      <YjEmpty image="network" :text="loadError || '项目不存在'">
+        <wd-button size="small" type="primary" @click="loadProduct">重新加载</wd-button>
+      </YjEmpty>
+    </view>
+
+    <template v-else>
+      <swiper
+        v-if="product.video || product.banners.length"
+        class="detail-hero"
+        indicator-dots
+        circular
+        indicator-color="rgba(255,255,255,.55)"
+        indicator-active-color="#ffffff"
+      >
+        <swiper-item v-if="product.video">
+          <video class="detail-hero__media" :src="product.video" object-fit="cover" />
+        </swiper-item>
+        <swiper-item v-for="image in product.banners" :key="image">
+          <image
+            v-if="!failedImages.includes(image)"
+            class="detail-hero__media"
+            :src="image"
+            mode="aspectFill"
+            @click="previewImage(image)"
+            @error="markImageFailed(image)"
+          />
+          <view v-else class="detail-hero__placeholder">悦己 · DLumière</view>
+        </swiper-item>
+      </swiper>
+      <view v-else class="detail-hero detail-hero__placeholder">悦己 · DLumière</view>
+
+      <view class="price-band">
+        <view class="price-band__label">悦己价</view>
+        <view class="price-band__main">
+          <view class="price-band__price-row">
+            <text class="price-band__caption">售价</text>
+            <text class="price-band__price">{{ formatPrice(currentPrice, true) }}</text>
+            <text v-if="currentOriginalPrice > currentPrice" class="price-band__origin">
+              {{ formatPrice(currentOriginalPrice, true) }}
+            </text>
+          </view>
+          <view v-if="savingAmount > 0" class="price-band__saving">
+            已优惠 {{ formatPrice(savingAmount, true) }}
           </view>
         </view>
-      </template>
+      </view>
 
-      <template v-else-if="activeDetailTab === 8">
-        <view class="detail-content__block-title"><YjQTag />该项目做完需要注意哪些问题？</view>
-        <view v-for="(tip, index) in postCareTips" :key="index" class="detail-content__text">
-          {{ index + 1 }}、{{ tip }}
+      <view class="detail-info">
+        <view class="detail-info__name">{{ product.name }}</view>
+        <view v-if="product.subTitle" class="detail-info__subtitle">{{ product.subTitle }}</view>
+        <view class="detail-info__meta">
+          <text>已售 {{ product.sales }} 份</text>
+          <text v-if="product.stock > 0">库存 {{ product.stock }}</text>
         </view>
-        <view class="detail-content__end">没有更多了~</view>
-      </template>
-
-      <view v-else class="detail-content__loading">内容加载中...</view>
-    </view>
-
-    <!-- 项目详情 / 适用门店 -->
-    <view class="detail-stores card">
-      <view class="detail-stores__tabs">
-        <view
-          v-for="(tab, index) in storeTabs"
-          :key="tab"
-          class="detail-stores__tab"
-          :class="{ 'detail-stores__tab--active': index === activeStoreTab }"
-          @click="activeStoreTab = index"
-        >
-          {{ tab }}
+        <view v-if="product.tags.length" class="detail-info__tags">
+          <text v-for="tag in product.tags" :key="tag" class="detail-info__tag">{{ tag }}</text>
         </view>
       </view>
 
-      <template v-if="activeStoreTab === 1">
-        <view
-          v-for="store in detailStores"
-          :key="store.address"
-          class="detail-stores__item"
-        >
-          <view class="detail-stores__address">{{ store.address }}</view>
-          <view class="detail-stores__distance">{{ store.distance }}</view>
+      <view class="detail-section detail-sku">
+        <view class="detail-section__title">项目</view>
+        <view class="detail-sku__list">
+          <view
+            v-for="sku in product.skus"
+            :key="sku.id"
+            class="detail-sku__option"
+            :class="{
+              'detail-sku__option--active': selectedSkuId === sku.id,
+              'detail-sku__option--disabled': sku.stock <= 0,
+            }"
+            @click="selectSku(sku)"
+          >
+            <view>
+              <view class="detail-sku__name">{{ sku.name }}</view>
+              <view class="detail-sku__stock">
+                {{ sku.stock > 0 ? `剩余 ${sku.stock}` : "暂时缺货" }}
+              </view>
+            </view>
+            <text class="detail-sku__price">{{ formatPrice(sku.price, true) }}</text>
+          </view>
         </view>
-        <view class="detail-stores__all" @click="handleComingSoon">全部门店 ▾</view>
 
-        <view class="detail-stores__notes">
-          <view class="detail-stores__notes-title">购买须知</view>
-          <template v-for="note in purchaseNotes" :key="note.title">
-            <view class="detail-stores__notes-sub">{{ note.title }}</view>
-            <view class="detail-stores__notes-text">{{ note.text }}</view>
-          </template>
+        <view v-if="selectedSku" class="detail-sku__summary">
+          <view class="detail-sku__summary-title">
+            <text>{{ selectedSku.name }}</text>
+            <text>×1</text>
+          </view>
+          <view class="detail-sku__summary-row">
+            <text>规格</text>
+            <text>{{ selectedSku.name }}</text>
+          </view>
         </view>
-      </template>
+      </view>
 
-      <view v-else class="detail-stores__loading">项目详情内容</view>
-    </view>
+      <view v-if="product.detailHtml" class="detail-section">
+        <view class="detail-section__title">项目介绍</view>
+        <rich-text class="detail-rich" :nodes="product.detailHtml" />
+      </view>
+
+      <view v-if="product.description" class="detail-section">
+        <view class="detail-section__title">购买说明</view>
+        <text class="detail-note">{{ product.description }}</text>
+      </view>
+    </template>
 
     <template #footer>
-      <YjBuyBar label="立即购买" @buy="handleComingSoon" @consult="handleComingSoon" />
+      <view v-if="product" class="detail-footer">
+        <view class="detail-footer__cart" @click="navigate(RoutePath.CART)">
+          <wd-badge :model-value="cartStore.totalCount || null" :max="99">
+            <wd-icon name="cart" size="44rpx" />
+          </wd-badge>
+          <text>购物车</text>
+        </view>
+        <wd-button
+          class="detail-footer__button"
+          type="primary"
+          plain
+          :disabled="!canBuy || !!submitting"
+          :loading="submitting === 'cart'"
+          @click="handleAddCart"
+        >
+          加入购物车
+        </wd-button>
+        <wd-button
+          class="detail-footer__button"
+          type="primary"
+          :disabled="!canBuy || !!submitting"
+          @click="handleBuy"
+        >
+          立即购买
+        </wd-button>
+      </view>
     </template>
   </YjPage>
 </template>
 
 <script setup lang="ts">
-import {
-  detailPhotoCaption,
-  detailStores,
-  detailTabs,
-  highlightText,
-  introText,
-  postCareTips,
-  purchaseNotes,
-  treatmentStats,
-} from "@/mocks/product-detail";
+import ProductAPI, { type ProductDetail, type ProductSku } from "@/api/product";
+import { RoutePath } from "@/constants";
+import { useLogin } from "@/composables/useLogin";
+import { useCartStore } from "@/stores/cart";
+import { formatPrice } from "@/utils/format";
+import { goBack, navigate } from "@/utils/navigate";
 
-/** 门店区块的两个 Tab。 */
-const storeTabs = ["项目详情", "适用门店"];
+const product = ref<ProductDetail>();
+const productId = ref("");
+const selectedSkuId = ref("");
+const failedImages = ref<string[]>([]);
+const loading = ref(false);
+const loadError = ref("");
+const submitting = ref<"" | "cart" | "buy">("");
+const statusBarHeight = uni.getSystemInfoSync().statusBarHeight ?? 0;
+const cartStore = useCartStore();
+const { ensureLogin } = useLogin();
 
-const productName = ref("钻石超塑");
-const activeDetailTab = ref(0);
-const activeStoreTab = ref(0);
+const selectedSku = computed(() =>
+  product.value?.skus.find((sku) => sku.id === selectedSkuId.value)
+);
+const currentPrice = computed(() => selectedSku.value?.price ?? product.value?.price ?? 0);
+const currentOriginalPrice = computed(
+  () => selectedSku.value?.originalPrice ?? product.value?.originalPrice ?? currentPrice.value
+);
+const savingAmount = computed(() =>
+  Math.max(0, currentOriginalPrice.value - currentPrice.value)
+);
+const canBuy = computed(() => Boolean(selectedSku.value && selectedSku.value.stock > 0));
+
+function selectSku(sku: ProductSku) {
+  if (sku.stock <= 0) {
+    uni.showToast({ title: "该规格暂时缺货", icon: "none" });
+    return;
+  }
+  selectedSkuId.value = sku.id;
+}
+
+function previewImage(current: string) {
+  if (!product.value) return;
+  const urls = product.value.banners.filter((image) => !failedImages.value.includes(image));
+  if (urls.length) uni.previewImage({ current, urls });
+}
+
+function markImageFailed(image: string) {
+  if (!failedImages.value.includes(image)) failedImages.value.push(image);
+}
+
+async function loadProduct() {
+  if (!productId.value || loading.value) return;
+  loading.value = true;
+  loadError.value = "";
+  try {
+    product.value = await ProductAPI.getDetail(productId.value);
+    selectedSkuId.value = product.value.skus.find((sku) => sku.stock > 0)?.id ?? "";
+  } catch (error) {
+    product.value = undefined;
+    loadError.value = error instanceof Error ? error.message : "项目加载失败";
+  } finally {
+    loading.value = false;
+  }
+}
+
+function ensureDetailLogin(): boolean {
+  const from = `${RoutePath.PRODUCT_DETAIL}?id=${encodeURIComponent(productId.value)}`;
+  return ensureLogin(from);
+}
+
+async function handleAddCart() {
+  if (!selectedSku.value || submitting.value || !ensureDetailLogin()) return;
+  submitting.value = "cart";
+  try {
+    await cartStore.add(selectedSku.value.id, 1);
+    uni.showToast({ title: "已加入购物车", icon: "success" });
+  } finally {
+    submitting.value = "";
+  }
+}
+
+function handleBuy() {
+  if (!selectedSku.value || submitting.value) return;
+  submitting.value = "buy";
+  navigate(RoutePath.ORDER_CONFIRM, {
+    requireAuth: true,
+    params: { productId: productId.value, skuId: selectedSku.value.id, quantity: 1 },
+  });
+  submitting.value = "";
+}
 
 onLoad((options) => {
-  if (options?.name) {
-    productName.value = decodeURIComponent(options.name);
-    uni.setNavigationBarTitle({ title: productName.value });
+  productId.value = options?.id ?? "";
+  if (!productId.value) {
+    loadError.value = "项目不存在";
+    return;
   }
+  void loadProduct();
 });
-
-function handleComingSoon() {
-  uni.showToast({ title: "敬请期待", icon: "none" });
-}
 </script>
 
 <style lang="scss" scoped>
-.detail-photos {
-  display: flex;
-  gap: $spacing-xs;
-}
-
-.detail-photos__item {
-  flex: 1;
-  height: 200rpx;
-  background: linear-gradient(135deg, $color-primary-tint, $color-surface-rose);
-  border-radius: 16rpx;
-}
-
-.detail-photo-caption {
-  padding: $spacing-sm 0;
-}
-
-.detail-photo-caption__store {
-  font-size: $font-size-xs;
-  color: $color-text-sub;
-}
-
-.detail-photo-caption__meta {
-  font-size: $font-size-xs;
-  color: $color-text-placeholder;
-}
-
-.detail-qa {
-  margin-bottom: $spacing-md;
-}
-
-.detail-qa__head {
-  display: flex;
-  gap: $spacing-xs;
-  align-items: center;
-  margin-bottom: $spacing-md;
-}
-
-.detail-qa__title,
-.detail-qa__name {
-  font-size: $font-size-lg;
-  font-weight: bold;
-  color: $color-text-title;
-}
-
-.detail-qa__official {
-  display: flex;
-  gap: 2rpx;
-  align-items: center;
-  padding: 2rpx 10rpx;
-  font-size: 20rpx;
-  color: $color-text-sub;
-  border: 1rpx solid $color-primary-light;
-  border-radius: 6rpx;
-}
-
-.detail-qa__stats {
-  display: flex;
-  margin-bottom: $spacing-md;
-  overflow: hidden;
-  background-color: $color-primary-tint;
-  border-radius: 24rpx;
-}
-
-.detail-qa__stat {
-  position: relative;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: $spacing-xs;
-  align-items: center;
-  padding: $spacing-md 0;
-}
-
-.detail-qa__stat-divider {
+.detail-nav {
   position: absolute;
-  top: $spacing-sm;
-  bottom: $spacing-sm;
+  top: 0;
+  right: 0;
   left: 0;
-  width: 1rpx;
-  background-color: $color-primary-lighter;
+  z-index: 5;
+  pointer-events: none;
+
+  &__back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 68rpx;
+    height: 68rpx;
+    margin: 12rpx 0 0 $page-padding;
+    color: $color-text-title;
+    pointer-events: auto;
+    background: rgb(255 255 255 / 78%);
+    backdrop-filter: blur(10rpx);
+    border-radius: 50%;
+  }
 }
 
-.detail-qa__stat-label {
-  font-size: $font-size-xs;
-  color: $color-text-sub;
-}
-
-.detail-qa__stat-value {
-  font-size: $font-size-xs;
-  font-weight: bold;
-  line-height: 1.4;
-  color: $color-text-title;
-  text-align: center;
-}
-
-.detail-qa__intro {
-  margin-bottom: $spacing-md;
-}
-
-.detail-qa__intro-title {
-  margin-bottom: $spacing-sm;
-  font-size: $font-size-md;
-  font-weight: bold;
-  color: $color-text-title;
-}
-
-.detail-qa__intro-text {
-  font-size: $font-size-md;
-  line-height: 1.7;
-  color: $color-text-sub;
-}
-
-.detail-qa__more {
+.detail-status {
   display: flex;
-  gap: $spacing-xs;
+  gap: $spacing-sm;
   align-items: center;
-  font-size: $font-size-md;
+  justify-content: center;
+  min-height: 720rpx;
   color: $color-text-sub;
 }
 
-.detail-tabs {
-  padding-top: $spacing-md;
-  padding-bottom: $spacing-md;
-  margin-bottom: $spacing-md;
-}
+.detail-hero {
+  height: 620rpx;
+  background: linear-gradient(145deg, #eef4ef, #d9e7dc);
 
-.detail-content {
-  margin-bottom: $spacing-md;
-}
+  &__media {
+    width: 100%;
+    height: 100%;
+  }
 
-.detail-content__section-title {
-  margin-bottom: $spacing-md;
-  font-size: $font-size-md;
-  font-weight: bold;
-  color: $color-text-content;
-}
-
-.detail-content__block {
-  margin-bottom: $spacing-md;
-}
-
-.detail-content__block-title {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: $spacing-sm;
-  font-size: $font-size-md;
-  font-weight: bold;
-  color: $color-text-title;
-}
-
-.detail-content__text {
-  font-size: $font-size-md;
-  line-height: 1.7;
-  color: $color-text-sub;
-
-  + .detail-content__text {
-    margin-top: $spacing-xs;
+  &__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: $font-size-lg;
+    font-weight: 600;
+    color: $color-primary;
   }
 }
 
-.detail-content__text--bold {
-  font-weight: bold;
-  color: $color-text-title;
-}
-
-.detail-content__loading,
-.detail-content__end {
-  padding: $spacing-lg 0;
-  font-size: $font-size-sm;
-  color: $color-text-placeholder;
-  text-align: center;
-}
-
-.detail-content__end {
-  padding-top: $spacing-lg;
-}
-
-.detail-stores__tabs {
+.price-band {
   display: flex;
-  margin: (-$spacing-md) (-$spacing-md) 0;
+  min-height: 108rpx;
+  background: #edf6ef;
 
-  @include hairline(bottom);
-}
+  &__label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 112rpx;
+    font-size: $font-size-md;
+    font-weight: 700;
+    color: #fff;
+    background: $color-primary-dark;
+  }
 
-.detail-stores__tab {
-  flex: 1;
-  padding: $spacing-md 0;
-  font-size: $font-size-md;
-  color: $color-text-placeholder;
-  text-align: center;
-  border-bottom: 4rpx solid transparent;
-}
+  &__main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    padding: $spacing-sm $spacing-md;
+  }
 
-.detail-stores__tab--active {
-  font-weight: 500;
-  color: $color-text-title;
-  border-bottom-color: $color-text-title;
-}
+  &__price-row {
+    display: flex;
+    gap: $spacing-xs;
+    align-items: baseline;
+  }
 
-.detail-stores__item {
-  padding: $spacing-md 0;
-  margin: $spacing-md 0;
-  border: 1rpx solid $color-border;
-  border-radius: 24rpx;
+  &__caption {
+    font-size: $font-size-sm;
+    color: $color-text-content;
+  }
 
-  & + .detail-stores__item {
-    margin-top: -$spacing-xs;
+  &__price {
+    font-size: 44rpx;
+    font-weight: 800;
+    color: $color-text-title;
+  }
+
+  &__origin {
+    font-size: $font-size-sm;
+    color: $color-text-sub;
+    text-decoration: line-through;
+  }
+
+  &__saving {
+    align-self: flex-start;
+    padding: 2rpx $spacing-xs;
+    font-size: $font-size-xs;
+    color: $color-primary;
+    border: 1rpx solid $color-primary-lighter;
   }
 }
 
-.detail-stores__address {
-  padding: 0 $spacing-md;
-  font-size: $font-size-xs;
-  color: $color-text-title;
+.detail-info {
+  padding: $spacing-lg $page-padding;
+  background: $color-bg;
+
+  &__name {
+    font-size: 42rpx;
+    font-weight: 800;
+    line-height: 1.3;
+    color: $color-text-title;
+  }
+
+  &__subtitle {
+    margin-top: $spacing-sm;
+    font-size: $font-size-md;
+    color: $color-text-content;
+  }
+
+  &__meta {
+    display: flex;
+    gap: $spacing-lg;
+    margin-top: $spacing-md;
+    font-size: $font-size-sm;
+    color: $color-text-sub;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+    margin-top: $spacing-md;
+  }
+
+  &__tag {
+    padding: 4rpx 12rpx;
+    font-size: $font-size-xs;
+    color: $color-primary;
+    background: rgb(45 90 61 / 8%);
+    border-radius: $radius-tag;
+  }
 }
 
-.detail-stores__distance {
-  padding: $spacing-xs $spacing-md 0;
-  font-size: $font-size-xs;
-  color: $color-text-placeholder;
-  text-align: right;
+.detail-section {
+  padding: $spacing-lg $page-padding;
+  margin-top: 16rpx;
+  background: $color-bg;
+
+  &__title {
+    margin-bottom: $spacing-lg;
+    font-size: $font-size-lg;
+    font-weight: 800;
+    color: $color-text-title;
+  }
 }
 
-.detail-stores__all {
-  padding: $spacing-sm 0;
+.detail-sku {
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 96rpx;
+    padding: $spacing-sm $spacing-md;
+    border: 2rpx solid $color-border;
+
+    &--active {
+      background: rgb(45 90 61 / 4%);
+      border-color: $color-primary;
+    }
+
+    &--disabled {
+      color: $color-text-disabled;
+      background: $color-bg-page;
+    }
+  }
+
+  &__name {
+    font-size: $font-size-md;
+    font-weight: 600;
+  }
+
+  &__stock {
+    margin-top: 4rpx;
+    font-size: $font-size-xs;
+    color: $color-text-placeholder;
+  }
+
+  &__price {
+    font-size: $font-size-md;
+    font-weight: 600;
+  }
+
+  &__summary {
+    margin-top: $spacing-lg;
+    background: $color-bg-page;
+    border: 1rpx solid $color-line;
+  }
+
+  &__summary-title,
+  &__summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-md;
+  }
+
+  &__summary-title {
+    font-weight: 600;
+    border-bottom: 1rpx solid $color-line;
+  }
+
+  &__summary-row {
+    gap: $spacing-lg;
+    justify-content: flex-start;
+    color: $color-text-sub;
+  }
+}
+
+.detail-rich {
+  display: block;
+  width: 100%;
+  overflow: hidden;
   font-size: $font-size-md;
-  color: $color-text-sub;
-  text-align: center;
-  border: 1rpx solid $color-border;
-  border-radius: 24rpx;
-}
-
-.detail-stores__notes {
-  margin-top: $spacing-lg;
-}
-
-.detail-stores__notes-title {
-  margin-bottom: $spacing-sm;
-  font-size: $font-size-md;
-  font-weight: bold;
-  color: $color-text-title;
-}
-
-.detail-stores__notes-sub {
-  margin-top: $spacing-sm;
-  font-size: $font-size-xs;
-  font-weight: 500;
-  color: $color-text-content;
-}
-
-.detail-stores__notes-text {
-  margin-top: $spacing-xs;
-  font-size: $font-size-xs;
   line-height: 1.7;
-  color: $color-text-sub;
-  white-space: pre-line;
+  color: $color-text-content;
+
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+  :deep(img) {
+    max-width: 100% !important;
+    height: auto !important;
+  }
 }
 
-.detail-stores__loading {
-  padding: $spacing-lg 0;
-  font-size: $font-size-sm;
-  color: $color-text-placeholder;
-  text-align: center;
+.detail-note {
+  font-size: $font-size-md;
+  line-height: 1.8;
+  color: $color-text-sub;
+  white-space: pre-wrap;
+}
+
+.detail-footer {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+
+  &__cart {
+    display: flex;
+    flex: 0 0 88rpx;
+    flex-direction: column;
+    gap: 2rpx;
+    align-items: center;
+    font-size: $font-size-xs;
+    color: $color-text-content;
+  }
+
+  &__button {
+    flex: 1;
+  }
 }
 </style>

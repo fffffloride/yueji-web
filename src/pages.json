@@ -17,7 +17,8 @@
     {
       "path": "pages/product/index",
       "style": {
-        "navigationBarTitleText": "项目"
+        "navigationBarTitleText": "产品",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -56,16 +57,12 @@
       "root": "pages-sub/product",
       "pages": [
         {
-          "path": "search/index",
-          "style": { "navigationBarTitleText": "搜索" }
-        },
-        {
           "path": "list/index",
           "style": { "navigationBarTitleText": "商品列表", "enablePullDownRefresh": true }
         },
         {
           "path": "detail/index",
-          "style": { "navigationBarTitleText": "商品详情" }
+          "style": { "navigationBarTitleText": "商品详情", "navigationStyle": "custom" }
         }
       ]
     },

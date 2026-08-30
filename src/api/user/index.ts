@@ -1,13 +1,40 @@
 import { request } from "@/utils/request";
-import type { LoginRequest, LoginResult, UserForm, UserInfo, UserPoints, UserWallet } from "./types";
+import type {
+  LoginRequest,
+  LoginResult,
+  MemberProfile,
+  MockLoginRequest,
+  UserForm,
+  UserInfo,
+} from "./types";
 
-const USER_BASE_URL = "/user";
+const AUTH_BASE_URL = "/app/auth";
+const MEMBER_BASE_URL = "/app/member";
+
+const toUserInfo = (profile: MemberProfile): UserInfo => ({
+  id: profile.id,
+  nickname: profile.nickname,
+  avatar: profile.avatar ?? "",
+  phone: profile.mobile ?? "",
+  totalConsumption: profile.totalSpent,
+  points: profile.points,
+});
 
 const UserAPI = {
-  /** 微信登录，用 code 换取 token 与用户信息。 */
+  /** 微信静默登录，用 code 换取会员 token。 */
   login(data: LoginRequest) {
-    return request<LoginResult, LoginRequest>({
-      url: `${USER_BASE_URL}/login`,
+    return request<LoginResult, Pick<LoginRequest, "code">>({
+      url: `${AUTH_BASE_URL}/silent-login`,
+      method: "POST",
+      data: { code: data.code },
+      skipAuth: true,
+    });
+  },
+
+  /** 本地联调登录，服务端只在非生产环境开放。 */
+  mockLogin(data: MockLoginRequest = {}) {
+    return request<LoginResult, MockLoginRequest>({
+      url: `${AUTH_BASE_URL}/mock-login`,
       method: "POST",
       data,
       skipAuth: true,
@@ -15,23 +42,18 @@ const UserAPI = {
   },
 
   /** 获取当前登录用户信息。 */
-  getInfo() {
-    return request<UserInfo>({ url: `${USER_BASE_URL}/info` });
+  async getInfo() {
+    return toUserInfo(await request<MemberProfile>({ url: `${MEMBER_BASE_URL}/profile` }));
   },
 
   /** 更新个人资料。 */
-  update(data: UserForm) {
-    return request<void, UserForm>({ url: `${USER_BASE_URL}/info`, method: "PUT", data });
-  },
-
-  /** 获取用户积分。 */
-  getPoints() {
-    return request<UserPoints>({ url: `${USER_BASE_URL}/points` });
-  },
-
-  /** 获取用户钱包。 */
-  getWallet() {
-    return request<UserWallet>({ url: `${USER_BASE_URL}/wallet` });
+  async update(data: UserForm) {
+    const profile = await request<MemberProfile, Pick<UserForm, "nickname" | "avatar" | "gender">>({
+      url: `${MEMBER_BASE_URL}/profile`,
+      method: "PUT",
+      data: { nickname: data.nickname, avatar: data.avatar, gender: data.gender },
+    });
+    return toUserInfo(profile);
   },
 };
 

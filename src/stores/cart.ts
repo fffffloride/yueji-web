@@ -1,64 +1,72 @@
 import { defineStore } from "pinia";
-import { StorageKey } from "@/constants";
+import CartAPI, { type CartItem } from "@/api/cart";
 import store from "./index";
-
-export interface CartItem {
-  productId: string;
-  skuId: string;
-  name: string;
-  skuName: string;
-  cover: string;
-  /** 单价（分） */
-  price: number;
-  quantity: number;
-  /** 结算时是否勾选 */
-  checked: boolean;
-}
 
 export const useCartStore = defineStore("cart", () => {
   const items = ref<CartItem[]>([]);
+  const loading = ref(false);
+  let pendingFetch: Promise<void> | undefined;
 
-  const totalCount = computed(() => items.value.reduce((sum, item) => sum + item.quantity, 0));
-  const checkedItems = computed(() => items.value.filter((item) => item.checked));
-  const isAllChecked = computed(
-    () => items.value.length > 0 && items.value.every((item) => item.checked)
+  const validItems = computed(() => items.value.filter((item) => !item.invalid));
+  const totalCount = computed(() =>
+    validItems.value.reduce((sum, item) => sum + item.quantity, 0)
   );
-  /** 已勾选商品的合计金额（分）。 */
+  const checkedItems = computed(() => validItems.value.filter((item) => item.checked));
+  const isAllChecked = computed(
+    () => validItems.value.length > 0 && validItems.value.every((item) => item.checked)
+  );
   const checkedAmount = computed(() =>
     checkedItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
   );
 
-  function findIndex(skuId: string) {
-    return items.value.findIndex((item) => item.skuId === skuId);
+  function fetch(silent = false): Promise<void> {
+    if (pendingFetch) return pendingFetch;
+    loading.value = true;
+    pendingFetch = CartAPI.getList()
+      .then((rows) => {
+        items.value = rows;
+      })
+      .catch((error: unknown) => {
+        if (!silent) throw error;
+      })
+      .finally(() => {
+        loading.value = false;
+        pendingFetch = undefined;
+      });
+    return pendingFetch;
   }
 
-  function addItem(item: Omit<CartItem, "checked">) {
-    const index = findIndex(item.skuId);
-    if (index > -1) {
-      items.value[index].quantity += item.quantity;
-    } else {
-      items.value.push({ ...item, checked: true });
-    }
+  async function refreshAfterMutation() {
+    if (pendingFetch) await pendingFetch;
+    await fetch();
   }
 
-  function updateQuantity(skuId: string, quantity: number) {
-    const index = findIndex(skuId);
-    if (index > -1) items.value[index].quantity = Math.max(1, quantity);
+  async function add(skuId: string, quantity = 1) {
+    await CartAPI.add({ skuId, quantity });
+    await refreshAfterMutation();
   }
 
-  function removeItems(skuIds: string[]) {
-    items.value = items.value.filter((item) => !skuIds.includes(item.skuId));
+  async function updateQuantity(id: string, quantity: number) {
+    await CartAPI.update(id, { quantity });
+    await refreshAfterMutation();
   }
 
-  function toggleChecked(skuId: string, checked: boolean) {
-    const index = findIndex(skuId);
-    if (index > -1) items.value[index].checked = checked;
+  async function toggleChecked(id: string, checked: boolean) {
+    await CartAPI.update(id, { checked: checked ? 1 : 0 });
+    await refreshAfterMutation();
   }
 
-  function toggleAllChecked(checked: boolean) {
-    items.value.forEach((item) => {
-      item.checked = checked;
-    });
+  async function toggleAllChecked(checked: boolean) {
+    const targets = validItems.value.filter((item) => item.checked !== checked);
+    await Promise.all(
+      targets.map((item) => CartAPI.update(item.id, { checked: checked ? 1 : 0 }))
+    );
+    await refreshAfterMutation();
+  }
+
+  async function remove(id: string) {
+    await CartAPI.remove(id);
+    await refreshAfterMutation();
   }
 
   function clear() {
@@ -67,21 +75,23 @@ export const useCartStore = defineStore("cart", () => {
 
   return {
     items,
+    loading,
     totalCount,
     checkedItems,
     isAllChecked,
     checkedAmount,
-    addItem,
+    fetch,
+    add,
     updateQuantity,
-    removeItems,
     toggleChecked,
     toggleAllChecked,
+    remove,
     clear,
   };
-}, {
-  persist: { key: StorageKey.CART, paths: ["items"] },
 });
 
 export function useCartStoreHook() {
   return useCartStore(store);
 }
+
+export type { CartItem };

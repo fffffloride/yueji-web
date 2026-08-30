@@ -13,6 +13,8 @@ export interface CategoryItem {
 export interface ProductItem {
   id: string;
   name: string;
+  /** 副标题 */
+  subTitle: string;
   /** 主图 */
   cover: string;
   /** 原价（分） */
@@ -20,8 +22,27 @@ export interface ProductItem {
   /** 现售价（分） */
   price: number;
   sales: number;
+  painFriendly: boolean;
   /** 推荐 / 新品 / 热卖等标签 */
   tags: string[];
+}
+
+export interface ProductCatalogSection {
+  id: string;
+  name: string;
+  total: number;
+  products: ProductItem[];
+}
+
+export interface ProductCatalogGroup {
+  id: string;
+  name: string;
+  fixed?: boolean;
+  sections: ProductCatalogSection[];
+}
+
+export interface ProductCatalog {
+  groups: ProductCatalogGroup[];
 }
 
 /** 商品规格（SKU）。 */

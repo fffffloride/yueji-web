@@ -90,7 +90,7 @@ image {
 
 // 配合自定义 TabBar 使用，避免内容被遮挡
 .page__body--with-tabbar {
-  padding-bottom: calc(#{$height-tabbar} + #{$spacing-lg});
+  // padding-bottom: calc(#{$height-tabbar} + #{$spacing-lg});
 }
 
 .page__footer {
