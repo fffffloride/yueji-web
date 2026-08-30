@@ -34,6 +34,10 @@ export const RoutePath = {
   USER_MESSAGE: "/pages-sub/user/message/index",
   USER_SETTINGS: "/pages-sub/user/settings/index",
   USER_HELP: "/pages-sub/user/help/index",
+  USER_GIFT_CARD: "/pages-sub/user/gift-card/index",
+  USER_MEDICAL_RECORD: "/pages-sub/user/medical-record/index",
+  USER_COMMUNITY: "/pages-sub/user/community/index",
+  USER_VERIFY_GIFT: "/pages-sub/user/verify-gift/index",
 
   GROUP_BUY_LIST: "/pages-sub/marketing/group-buy-list/index",
   GROUP_BUY_DETAIL: "/pages-sub/marketing/group-buy-detail/index",

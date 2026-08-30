@@ -161,6 +161,22 @@
         {
           "path": "help/index",
           "style": { "navigationBarTitleText": "帮助与客服" }
+        },
+        {
+          "path": "gift-card/index",
+          "style": { "navigationBarTitleText": "礼品卡" }
+        },
+        {
+          "path": "medical-record/index",
+          "style": { "navigationBarTitleText": "病历签署" }
+        },
+        {
+          "path": "community/index",
+          "style": { "navigationBarTitleText": "悦己圈" }
+        },
+        {
+          "path": "verify-gift/index",
+          "style": { "navigationBarTitleText": "核销有礼" }
         }
       ]
     },
