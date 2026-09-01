@@ -347,6 +347,7 @@ async function goToPayment(result: Pick<GroupBuyOrderResult, "groupId" | "orderI
     navigate(RoutePath.ORDER_PAY_RESULT, {
       redirect: true,
       params: {
+        orderId: result.orderId,
         paymentNo: payment.paymentNo,
         orderNo: result.orderNo || undefined,
         groupId: result.groupId,

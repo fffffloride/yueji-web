@@ -394,14 +394,14 @@ async function continuePayment(order: OrderDetail) {
   if (order.payAmount === 0) {
     navigate(RoutePath.ORDER_PAY_RESULT, {
       redirect: true,
-      params: { orderNo: order.orderNo, success: 1 },
+      params: { orderId: order.id, orderNo: order.orderNo, success: 1 },
     });
     return;
   }
   const payment = await PayAPI.create(order.id);
   navigate(RoutePath.ORDER_PAY_RESULT, {
     redirect: true,
-    params: { paymentNo: payment.paymentNo, orderNo: order.orderNo },
+    params: { orderId: order.id, paymentNo: payment.paymentNo, orderNo: order.orderNo },
   });
 }
 
