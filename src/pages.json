@@ -11,7 +11,8 @@
       "path": "pages/home/index",
       "style": {
         "navigationBarTitleText": "悦己DLumière",
-        "enablePullDownRefresh": true
+        "enablePullDownRefresh": true,
+        "navigationStyle": "custom"
       }
     },
     {
@@ -79,7 +80,7 @@
         },
         {
           "path": "list/index",
-          "style": { "navigationBarTitleText": "我的订单" }
+          "style": { "navigationBarTitleText": "全部订单" }
         },
         {
           "path": "detail/index",
@@ -129,7 +130,10 @@
         },
         {
           "path": "points/index",
-          "style": { "navigationBarTitleText": "我的积分" }
+          "style": {
+            "navigationBarTitleText": "我的积分",
+            "enablePullDownRefresh": true
+          }
         },
         {
           "path": "member/index",
@@ -141,7 +145,10 @@
         },
         {
           "path": "coupon/index",
-          "style": { "navigationBarTitleText": "我的优惠券" }
+          "style": {
+            "navigationBarTitleText": "我的优惠券",
+            "enablePullDownRefresh": true
+          }
         },
         {
           "path": "address/index",
@@ -269,7 +276,8 @@
     "list": [
       { "pagePath": "pages/home/index", "text": "首页" },
       { "pagePath": "pages/product/index", "text": "项目" },
-      { "pagePath": "pages/coupon/index", "text": "券包" },
+      { "pagePath": "pages/appointment/index", "text": "预约" },
+      { "pagePath": "pages/cart/index", "text": "购物车" },
       { "pagePath": "pages/mine/index", "text": "我的" }
     ]
   },

@@ -1,0 +1,222 @@
+.points-page {
+  min-height: 100vh;
+  padding: $spacing-md $page-padding $spacing-lg;
+}
+
+.points-summary {
+  position: relative;
+  padding: 42rpx $spacing-lg $spacing-lg;
+  overflow: hidden;
+  color: $color-bg;
+  background: linear-gradient(138deg, #204a32 0%, $color-primary 58%, #49775a 100%);
+  border-radius: 28rpx;
+
+  &::before,
+  &::after {
+    position: absolute;
+    content: "";
+    border: 2rpx solid rgba($color-bg, 0.08);
+    border-radius: 50%;
+  }
+
+  &::before {
+    top: -110rpx;
+    right: -70rpx;
+    width: 300rpx;
+    height: 300rpx;
+  }
+
+  &::after {
+    top: -54rpx;
+    right: 36rpx;
+    width: 180rpx;
+    height: 180rpx;
+  }
+}
+
+.points-summary__eyebrow {
+  position: relative;
+  z-index: 1;
+  font-size: $font-size-sm;
+  color: rgba($color-bg, 0.72);
+}
+
+.points-summary__balance {
+  position: relative;
+  z-index: 1;
+  margin-top: $spacing-xs;
+  font-size: 72rpx;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 2rpx;
+}
+
+.points-summary__level {
+  position: absolute;
+  top: 52rpx;
+  right: $spacing-lg;
+  z-index: 1;
+  padding: 8rpx 18rpx;
+  font-size: $font-size-xs;
+  color: $color-bg;
+  background: rgba($color-bg, 0.14);
+  border: 2rpx solid rgba($color-bg, 0.24);
+  border-radius: $radius-tag;
+}
+
+.points-summary__rules {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: $spacing-md;
+  margin-top: $spacing-lg;
+  border-top: 2rpx solid rgba($color-bg, 0.14);
+}
+
+.points-summary__rule {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4rpx;
+  align-items: center;
+  font-size: 20rpx;
+  color: rgba($color-bg, 0.68);
+}
+
+.points-summary__rule-value {
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: $color-bg;
+}
+
+.points-summary__rule-line {
+  width: 2rpx;
+  height: 44rpx;
+  background: rgba($color-bg, 0.14);
+}
+
+.points-detail {
+  padding: 0;
+  margin-top: $spacing-md;
+  overflow: hidden;
+}
+
+.points-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md;
+  border-bottom: 2rpx solid $color-line;
+}
+
+.points-detail__title {
+  font-size: $font-size-lg;
+  font-weight: 600;
+  color: $color-text-title;
+}
+
+.points-detail__subtitle,
+.points-detail__count {
+  margin-top: 4rpx;
+  font-size: $font-size-xs;
+  color: $color-text-placeholder;
+}
+
+.points-detail__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320rpx;
+}
+
+.points-detail__retry {
+  padding: $spacing-sm $spacing-lg;
+  margin-top: $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-primary;
+  border: 2rpx solid $color-primary;
+  border-radius: $radius-button;
+}
+
+.points-list__item {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+  min-height: 132rpx;
+  padding: $spacing-md;
+  border-bottom: 2rpx solid $color-line;
+
+  &:last-of-type {
+    border-bottom: 0;
+  }
+}
+
+.points-list__mark {
+  display: flex;
+  flex: 0 0 64rpx;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+  font-size: $font-size-lg;
+  font-weight: 500;
+  border-radius: 50%;
+
+  &.is-income {
+    color: $color-primary;
+    background: $color-primary-tint;
+  }
+
+  &.is-expense {
+    color: $color-text-sub;
+    background: $color-bg-page;
+  }
+}
+
+.points-list__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.points-list__name {
+  overflow: hidden;
+  font-size: $font-size-md;
+  font-weight: 500;
+  color: $color-text-title;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.points-list__time,
+.points-list__balance {
+  margin-top: 6rpx;
+  font-size: $font-size-xs;
+  color: $color-text-placeholder;
+}
+
+.points-list__value-wrap {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.points-list__value {
+  font-size: $font-size-lg;
+  font-weight: 600;
+
+  &.is-income {
+    color: $color-primary;
+  }
+
+  &.is-expense {
+    color: $color-text-title;
+  }
+}
+
+.points-detail__more {
+  padding: $spacing-md 0;
+  font-size: $font-size-sm;
+  color: $color-text-placeholder;
+  text-align: center;
+}

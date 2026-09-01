@@ -60,16 +60,6 @@
         </view>
       </view>
 
-      <!-- L3 挑战赛 -->
-      <view class="mine-member__challenge">
-        <text class="mine-member__challenge-text">
-          {{ member.challengeTitle }}，赠送价值{{ formatPrice(member.challengeGift, true) }}项目
-        </text>
-        <view class="mine-member__challenge-btn" @click.stop="emit('challenge')">
-          {{ member.challengeButtonText }}
-        </view>
-      </view>
-
       <!-- 统计 -->
       <view class="mine-member__stats">
         <view
@@ -88,7 +78,6 @@
 
 <script setup lang="ts">
 import type { MemberInfo } from "@/mocks/mine";
-import { formatPrice } from "@/utils/format";
 
 const props = withDefaults(
   defineProps<{
@@ -106,7 +95,6 @@ const emit = defineEmits<{
   (e: "login"): void;
   (e: "member"): void;
   (e: "unlock"): void;
-  (e: "challenge"): void;
   (e: "stat", index: number): void;
 }>();
 
@@ -269,29 +257,6 @@ function handleProfileClick() {
   padding: 0 24rpx 16rpx;
   font-size: $font-size-sm;
   color: $color-text-sub;
-}
-
-.mine-member__challenge {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20rpx 24rpx;
-  background: $color-primary-tint;
-  border-radius: 24rpx;
-}
-
-.mine-member__challenge-text {
-  font-size: $font-size-md;
-  color: $color-primary;
-}
-
-.mine-member__challenge-btn {
-  padding: 12rpx 32rpx;
-  font-size: $font-size-md;
-  font-weight: 700;
-  color: $color-bg;
-  background: $color-text-title;
-  border-radius: $radius-card;
 }
 
 .mine-member__stats {

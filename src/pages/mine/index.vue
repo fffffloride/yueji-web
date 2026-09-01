@@ -10,37 +10,17 @@
       @login="handleEntryClick(RoutePath.USER_MEMBER)"
       @member="handleEntryClick(RoutePath.USER_MEMBER)"
       @unlock="handleEntryClick(RoutePath.USER_MEMBER)"
-      @challenge="handleEntryClick(RoutePath.USER_MEMBER)"
       @stat="handleStatClick"
     />
 
     <!-- 快捷工具 -->
     <view class="mine-section">
-      <YjQuickEntry :items="quickTools" @click="handleQuickTool" />
-    </view>
-
-    <!-- 邀请有礼 -->
-    <view class="mine-section">
-      <YjInviteCard
-        :info="mineInvite"
-        @detail="handleEntryClick(RoutePath.DISTRIBUTION)"
-        @invite="handleEntryClick(RoutePath.DISTRIBUTION)"
-      />
+      <YjQuickEntry :items="mineQuickTools" @click="handleQuickTool" />
     </view>
 
     <!-- 服务入口 -->
     <view class="mine-section">
       <YjMineServiceGrid :items="mineServices" @select="handleServiceSelect" />
-    </view>
-
-    <!-- 社群二维码 -->
-    <view class="mine-section">
-      <YjCommunityCard :info="mineCommunity" @longpress="handleComingSoon" />
-    </view>
-
-    <!-- 专属服务群 -->
-    <view class="mine-section">
-      <YjServiceGroupCard :group="mineServiceGroup" @join="handleComingSoon" />
     </view>
 
     <!-- 退出登录：未登录不展示 -->
@@ -55,32 +35,17 @@
 <script setup lang="ts">
 import { useMessage } from "wot-design-uni";
 import { RoutePath } from "@/constants";
-import {
-  mineCommunity,
-  mineInvite,
-  mineMember,
-  mineQuickTools,
-  mineServiceGroup,
-  mineServices,
-} from "@/mocks/mine";
+import { mineMember, mineQuickTools, mineServices } from "@/mocks/mine";
 import { useUserStore } from "@/stores/user";
 import { navigate } from "@/utils/navigate";
 
 const userStore = useUserStore();
 const message = useMessage();
 
-/** 未登录时积分等数值显示「—」。 */
-const quickTools = computed(() =>
-  mineQuickTools.map((tool) => ({
-    ...tool,
-    value: tool.value && !userStore.isLoggedIn ? "—" : tool.value,
-  }))
-);
-
 /** 快捷工具对应路由，顺序与 mineQuickTools 一致。 */
 const QUICK_TOOL_ROUTES = [
   RoutePath.ORDER_LIST,
-  RoutePath.USER_GIFT_CARD,
+  RoutePath.USER_COUPON,
   RoutePath.USER_WALLET,
   RoutePath.USER_POINTS,
 ];

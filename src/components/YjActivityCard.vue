@@ -29,10 +29,13 @@ const emit = defineEmits<{
 <style lang="scss" scoped>
 .yj-activity {
   position: relative;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  padding: 20rpx;
+  min-height: 184rpx;
+  padding: 20rpx 20rpx 54rpx;
   overflow: hidden;
+  border: 1rpx solid $color-line;
   border-radius: 24rpx;
 }
 
@@ -40,28 +43,38 @@ const emit = defineEmits<{
   display: flex;
   gap: $spacing-xs;
   align-items: center;
+  min-width: 0;
 }
 
 .yj-activity__title {
+  min-width: 0;
+  overflow: hidden;
   font-size: $font-size-sm;
   font-weight: bold;
-  color: $color-text-title;
+  color: $color-primary-dark;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .yj-activity__badge {
+  flex-shrink: 0;
   padding: 2rpx 8rpx;
   font-size: 18rpx;
   font-weight: bold;
   color: $color-bg;
-  background-color: $color-price;
+  background-color: $color-primary-lighter;
   border-radius: 6rpx;
 }
 
 .yj-activity__sub {
+  display: -webkit-box;
   margin-top: $spacing-xs;
+  overflow: hidden;
   font-size: $font-size-xs;
   line-height: 1.6;
   color: $color-text-sub;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   white-space: pre-line;
 }
 
@@ -70,7 +83,11 @@ const emit = defineEmits<{
   right: 20rpx;
   bottom: 16rpx;
   left: 20rpx;
+  overflow: hidden;
   font-size: 16rpx;
-  color: $color-text-placeholder;
+  line-height: 1.2;
+  color: $color-primary-light;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

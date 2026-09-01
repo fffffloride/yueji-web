@@ -1,56 +1,54 @@
 <template>
   <YjPage :tabbar="RoutePath.HOME" :padded="false">
+    <!-- #ifndef MP-WEIXIN -->
+    <view class="home-platform-nav">悦己DLumière</view>
+    <!-- #endif -->
+
+    <view v-if="isDecorationLoading && !homeDecoration.banners.length" class="home-decoration-status">
+      <wd-loading />
+      <text>正在加载首页内容</text>
+    </view>
+
     <!-- Hero 轮播 -->
-    <view class="home-hero">
+    <view v-else-if="homeDecoration.banners.length" class="home-hero">
       <swiper
         class="home-hero__swiper"
-        circular
-        autoplay
+        :circular="homeDecoration.banners.length > 1"
+        :autoplay="homeDecoration.banners.length > 1"
         :interval="3500"
         :current="heroIndex"
         @change="handleHeroChange"
       >
-        <swiper-item v-for="slide in heroSlides" :key="slide.title">
-          <view class="home-hero__slide" :style="{ background: slide.bg }">
-            <view class="home-hero__image" />
-            <view class="home-hero__content">
-              <view class="home-hero__brand">
-                <YjLogo :size="28" />
-                <text class="home-hero__brand-name">悦己DLumière</text>
-              </view>
-              <view class="home-hero__title">{{ slide.title }}</view>
-              <view class="home-hero__subtitle">{{ slide.subtitle }}</view>
-              <view class="home-hero__features">{{ slide.features }}</view>
-              <view class="home-hero__foot">
-                <text class="home-hero__tag">{{ slide.tag }}</text>
-                <text class="home-hero__price">{{ formatPrice(slide.price, true) }}</text>
-              </view>
-            </view>
-            <view class="home-hero__slogan">
-              <text>悦己 · 由专业而美</text>
-              <text>Beauty &amp; Healthy</text>
+        <swiper-item v-for="banner in homeDecoration.banners" :key="banner.id">
+          <view class="home-hero__slide" @click="openBanner(banner)">
+            <image
+              v-if="!failedBannerIds.includes(banner.id)"
+              class="home-hero__image"
+              :src="banner.imageUrl"
+              mode="aspectFill"
+              @error="markBannerFailed(banner.id)"
+            />
+            <view v-else class="home-hero__placeholder">
+              <YjLogo :size="64" />
+              <text>悦己 · DLumière</text>
             </view>
           </view>
         </swiper-item>
       </swiper>
 
       <!-- Hero 悬浮操作 -->
-      <view class="home-hero__nav">
-        <view class="home-hero__consult">
+      <view class="home-hero__nav" :style="heroNavStyle">
+        <view class="home-hero__consult" @click="navigate(RoutePath.APPOINTMENT)">
           <wd-icon name="chat" size="24rpx" />
           <text>咨询/预约</text>
-        </view>
-        <view class="home-hero__actions">
-          <view class="home-hero__action-btn" @click="handleComingSoon"><wd-icon name="ellipsis" size="32rpx" /></view>
-          <view class="home-hero__action-btn" @click="handleComingSoon"><wd-icon name="scan" size="32rpx" /></view>
         </view>
       </view>
 
       <!-- 指示器 -->
       <view class="home-hero__dots">
         <view
-          v-for="(slide, index) in heroSlides"
-          :key="slide.title"
+          v-for="(banner, index) in homeDecoration.banners"
+          :key="banner.id"
           class="home-hero__dot"
           :class="{ 'home-hero__dot--active': index === heroIndex }"
           @click="heroIndex = index"
@@ -58,7 +56,12 @@
       </view>
     </view>
 
-    <YjTrustBar :items="trustItems" />
+    <view v-if="decorationLoadError" class="home-decoration-error">
+      <text>首页内容加载失败</text>
+      <text class="home-decoration-error__retry" @click="loadDecoration">重新加载</text>
+    </view>
+
+    <YjTrustBar v-if="trustItems.length" :items="trustItems" />
 
     <view class="home-sections">
       <!-- 快捷入口 -->
@@ -92,7 +95,7 @@
       </view>
 
       <!-- 免费面诊 CTA -->
-      <view class="home-section home-consult card">
+      <view class="home-section home-consult card" @click="navigate(RoutePath.APPOINTMENT)">
         <view class="home-consult__info">
           <view class="home-consult__title">
             <text class="home-consult__name">免费预约面诊</text>
@@ -100,56 +103,12 @@
           </view>
           <view class="home-consult__desc">无需下单，即刻预约到店获取专属变美方案</view>
         </view>
-        <view class="home-consult__button" @click="navigate(RoutePath.APPOINTMENT)">立即预约</view>
-      </view>
-
-      <!-- 近 30 天热榜 -->
-      <view class="home-section home-hot card">
-        <view class="home-hot__title">近30天热榜</view>
-        <view class="home-hot__tabs">
-          <YjCapsuleTab v-model="hotTab" :tabs="hotTabs" />
-        </view>
-        <YjRankItem
-          v-for="product in hotProducts"
-          :key="product.rank"
-          :product="product"
-          @click="goProductDetail(product.name)"
-        />
-      </view>
-
-      <!-- 附近门店 -->
-      <view class="home-section home-store card">
-        <YjSectionTitle title="附近的悦己轻医美门店" show-more @more="handleComingSoon" />
-        <view class="home-store__body">
-          <YjStoreCard
-            :name="nearbyStore.name"
-            :address="nearbyStore.address"
-            :meta="nearbyStore.cityTag"
-            cover
-            @click="handleComingSoon"
-          />
-        </view>
+        <view class="home-consult__button">立即预约</view>
       </view>
 
       <!-- 品牌故事 -->
-      <view class="home-section home-brand card">
-        <view class="home-brand__head">
-          <YjLogo :size="72" />
-          <view class="home-brand__name">悦己DLumière</view>
-          <view class="home-brand__slogan">悦 己 轻 医 美</view>
-          <view class="home-brand__tagline">悦己DLumière 中国轻医美连锁品牌</view>
-        </view>
-        <view class="home-brand__body">
-          <view class="home-brand__lead">{{ brandStory.slogan }}</view>
-          <view
-            v-for="(paragraph, index) in brandStory.paragraphs"
-            :key="index"
-            class="home-brand__paragraph"
-            :class="{ 'home-brand__paragraph--emphasis': index === 1 }"
-          >
-            {{ paragraph }}
-          </view>
-        </view>
+      <view v-if="homeDecoration.brandContent" class="home-section home-brand card">
+        <rich-text class="home-brand__body" :nodes="homeDecoration.brandContent" />
       </view>
 
       <!-- 品牌区块 -->
@@ -170,29 +129,74 @@
 </template>
 
 <script setup lang="ts">
+import DecorationAPI, { type HomeBanner, type HomeDecoration } from "@/api/decoration";
 import { RoutePath } from "@/constants";
 import {
   brandSections,
-  brandStory,
-  heroSlides,
-  hotProducts,
-  hotTabs,
-  nearbyStore,
   newUserCoupon,
   promoCards,
   quickEntries,
-  trustItems,
 } from "@/mocks/home";
 import { isLoggedIn as checkLoggedIn } from "@/utils/auth";
-import { formatPrice } from "@/utils/format";
 import { navigate } from "@/utils/navigate";
 
 const heroIndex = ref(0);
-const hotTab = ref(0);
+const homeDecoration = ref<HomeDecoration>({ banners: [], notices: [], brandContent: "" });
+const failedBannerIds = ref<string[]>([]);
+const isDecorationLoading = ref(false);
+const decorationLoadError = ref("");
+const heroNavStyle = getHeroNavStyle();
 const isLoggedIn = computed(() => checkLoggedIn());
+const trustItems = computed(() =>
+  homeDecoration.value.notices.map((notice) => notice.title.trim()).filter(Boolean)
+);
+
+function getHeroNavStyle(): Record<string, string> {
+  const style: Record<string, string> = {};
+  // #ifdef MP-WEIXIN
+  const systemInfo = uni.getSystemInfoSync();
+  const menuButton = uni.getMenuButtonBoundingClientRect();
+  const windowWidth = systemInfo.windowWidth || 375;
+  const menuButtonTop = menuButton.top || (systemInfo.statusBarHeight || 20) + 6;
+  const menuButtonLeft = menuButton.left || windowWidth - 95;
+  style.top = `${menuButtonTop}px`;
+  style.right = `${Math.max(12, windowWidth - menuButtonLeft + 8)}px`;
+  style.height = `${menuButton.height || 32}px`;
+  // #endif
+  return style;
+}
 
 function handleHeroChange(e: { detail: { current: number } }) {
   heroIndex.value = e.detail.current;
+}
+
+function markBannerFailed(id: string) {
+  if (!failedBannerIds.value.includes(id)) failedBannerIds.value.push(id);
+}
+
+function openBanner(banner: HomeBanner) {
+  const linkUrl = banner.linkUrl?.trim();
+  if (!linkUrl) return;
+  if (linkUrl.startsWith("/")) {
+    navigate(linkUrl);
+    return;
+  }
+  navigate(RoutePath.WEBVIEW, { params: { url: linkUrl } });
+}
+
+async function loadDecoration() {
+  if (isDecorationLoading.value) return;
+  isDecorationLoading.value = true;
+  decorationLoadError.value = "";
+  try {
+    homeDecoration.value = await DecorationAPI.getHome();
+    failedBannerIds.value = [];
+    heroIndex.value = 0;
+  } catch (error) {
+    decorationLoadError.value = error instanceof Error ? error.message : "首页内容加载失败";
+  } finally {
+    isDecorationLoading.value = false;
+  }
 }
 
 /** 快捷入口：前三项进我的预约（需登录），加入社群暂未开放。 */
@@ -213,20 +217,32 @@ function handleCouponClick() {
   navigate(RoutePath.COUPON);
 }
 
-function goProductDetail(name: string) {
-  navigate(RoutePath.PRODUCT_DETAIL, { params: { name } });
-}
-
 function handleComingSoon() {
   uni.showToast({ title: "敬请期待", icon: "none" });
 }
 
-onPullDownRefresh(() => {
+onLoad(() => {
+  void loadDecoration();
+});
+
+onPullDownRefresh(async () => {
+  await loadDecoration();
   uni.stopPullDownRefresh();
 });
 </script>
 
 <style lang="scss" scoped>
+.home-platform-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  font-size: $font-size-md;
+  font-weight: 600;
+  color: $color-text-title;
+  background-color: $color-bg;
+}
+
 .home-hero {
   position: relative;
 }
@@ -239,88 +255,26 @@ onPullDownRefresh(() => {
   position: relative;
   height: 100%;
   overflow: hidden;
-  transition: background 0.4s;
+  background-color: $color-primary-tint;
 }
 
 .home-hero__image {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 56%;
+  width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, $color-primary-tint, $color-surface-rose);
 }
 
-.home-hero__content {
-  position: absolute;
-  inset: 0;
+.home-hero__placeholder {
   display: flex;
   flex-direction: column;
+  gap: $spacing-md;
+  align-items: center;
   justify-content: center;
-  padding: 0 40rpx;
-}
-
-.home-hero__brand {
-  display: flex;
-  gap: $spacing-xs;
-  align-items: center;
-  margin-bottom: $spacing-xs;
-}
-
-.home-hero__brand-name {
-  font-size: $font-size-xs;
-  font-weight: bold;
-  color: $color-text-title;
-  letter-spacing: 2rpx;
-}
-
-.home-hero__title {
-  font-size: 64rpx;
-  font-weight: 900;
-  line-height: 1.2;
-  color: $color-text-title;
-}
-
-.home-hero__subtitle {
-  font-size: $font-size-md;
-  color: $color-text-content;
-}
-
-.home-hero__features {
-  margin-bottom: $spacing-sm;
-  font-size: $font-size-sm;
-  color: $color-text-sub;
-}
-
-.home-hero__foot {
-  display: flex;
-  gap: $spacing-sm;
-  align-items: center;
-}
-
-.home-hero__tag {
-  padding: 4rpx 16rpx;
-  font-size: 20rpx;
-  color: $color-bg;
-  background-color: $color-primary;
-  border-radius: 6rpx;
-}
-
-.home-hero__price {
-  font-size: 40rpx;
-  font-weight: bold;
-  color: $color-text-title;
-}
-
-.home-hero__slogan {
-  position: absolute;
-  right: $spacing-md;
-  bottom: $spacing-md;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  font-size: 16rpx;
-  color: $color-text-placeholder;
+  width: 100%;
+  height: 100%;
+  font-size: $font-size-lg;
+  font-weight: 600;
+  color: $color-primary;
+  background: linear-gradient(135deg, $color-primary-tint, $color-bg 68%, $color-surface-warm);
 }
 
 .home-hero__nav {
@@ -331,35 +285,21 @@ onPullDownRefresh(() => {
   z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  height: 64rpx;
 }
 
 .home-hero__consult {
   display: flex;
   gap: $spacing-xs;
   align-items: center;
-  padding: 12rpx $spacing-md;
+  height: 100%;
+  padding: 0 $spacing-md;
   font-size: $font-size-sm;
-  color: $color-text-content;
-  background-color: rgb(255 255 255 / 90%);
-  border: 1rpx solid $color-line;
+  font-weight: 600;
+  color: $color-primary-dark;
+  background-color: $color-primary-tint;
+  border: 1rpx solid $color-primary-lighter;
   border-radius: 40rpx;
-}
-
-.home-hero__actions {
-  display: flex;
-  gap: $spacing-sm;
-}
-
-.home-hero__action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 64rpx;
-  height: 64rpx;
-  background-color: rgb(255 255 255 / 90%);
-  border: 1rpx solid $color-line;
-  border-radius: 50%;
 }
 
 .home-hero__dots {
@@ -373,18 +313,43 @@ onPullDownRefresh(() => {
 .home-hero__dot {
   width: 12rpx;
   height: 8rpx;
-  background-color: rgb(0 0 0 / 20%);
+  background-color: rgb(255 255 255 / 72%);
   border-radius: 8rpx;
   transition: all 0.3s;
 }
 
 .home-hero__dot--active {
   width: 40rpx;
-  background-color: $color-text-title;
+  background-color: $color-primary;
+}
+
+.home-decoration-status {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+  justify-content: center;
+  height: 400rpx;
+  color: $color-text-sub;
+  background-color: $color-primary-tint;
+}
+
+.home-decoration-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-sub;
+  background-color: $color-bg;
+
+  &__retry {
+    color: $color-primary;
+  }
 }
 
 .home-sections {
   padding: $spacing-md;
+  background: linear-gradient(180deg, $color-primary-tint 0, $color-bg-page 132rpx);
 }
 
 .home-section {
@@ -402,6 +367,8 @@ onPullDownRefresh(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: linear-gradient(135deg, $color-primary-tint, $color-bg 78%);
+  border: 1rpx solid $color-line;
 }
 
 .home-consult__info {
@@ -426,7 +393,7 @@ onPullDownRefresh(() => {
   padding: 2rpx 12rpx;
   font-size: 20rpx;
   color: $color-bg;
-  background-color: $color-price;
+  background-color: $color-primary-lighter;
   border-radius: 6rpx;
 }
 
@@ -442,76 +409,24 @@ onPullDownRefresh(() => {
   font-size: $font-size-md;
   font-weight: bold;
   color: $color-bg;
-  background-color: $color-text-title;
+  background: linear-gradient(135deg, $color-primary-light, $color-primary-dark);
   border-radius: 24rpx;
 }
 
-.home-hot__title {
-  padding-top: $spacing-sm;
-  font-size: $font-size-lg;
-  font-weight: bold;
-  color: $color-text-title;
-}
-
-.home-hot__tabs {
-  padding: $spacing-md 0 $spacing-sm;
-}
-
-.home-store__body {
-  margin-top: $spacing-md;
-}
-
-.home-brand__head {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: $spacing-lg $spacing-md;
-  margin: (-$spacing-md) (-$spacing-md) $spacing-md;
-  background-color: $color-surface-warm;
-  border-radius: $radius-card $radius-card 0 0;
-}
-
-.home-brand__name {
-  margin-top: $spacing-sm;
-  font-size: $font-size-lg;
-  font-weight: 900;
-  color: $color-text-title;
-  letter-spacing: 4rpx;
-}
-
-.home-brand__slogan {
-  margin-top: $spacing-xs;
-  font-size: $font-size-sm;
-  color: $color-text-sub;
-  letter-spacing: 8rpx;
-}
-
-.home-brand__tagline {
-  margin-top: $spacing-xs;
-  font-size: 20rpx;
-  color: $color-text-placeholder;
-}
-
-.home-brand__lead {
-  margin-bottom: $spacing-md;
-  font-size: $font-size-md;
-  font-weight: bold;
-  color: $color-text-title;
-}
-
-.home-brand__paragraph {
+.home-brand__body {
+  display: block;
+  width: 100%;
+  overflow: hidden;
   font-size: $font-size-md;
   line-height: 1.8;
   color: $color-text-sub;
+  border-top: 4rpx solid $color-primary;
 
-  + .home-brand__paragraph {
-    margin-top: $spacing-md;
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+  :deep(img) {
+    max-width: 100% !important;
+    height: auto !important;
   }
-}
-
-.home-brand__paragraph--emphasis {
-  font-weight: 500;
-  color: $color-text-content;
 }
 
 .home-brand-section {
@@ -519,13 +434,14 @@ onPullDownRefresh(() => {
   height: 272rpx;
   padding: 40rpx;
   overflow: hidden;
+  border: 1rpx solid $color-line;
   border-radius: 32rpx;
 }
 
 .home-brand-section__title {
   font-size: 48rpx;
   font-weight: bold;
-  color: $color-text-title;
+  color: $color-primary-dark;
 }
 
 .home-brand-section__sub {
@@ -551,9 +467,8 @@ onPullDownRefresh(() => {
   bottom: $spacing-md;
   padding: 8rpx $spacing-md;
   font-size: $font-size-xs;
-  color: $color-text-content;
-  background-color: rgb(255 255 255 / 80%);
-  border: 1rpx solid $color-border;
-  border-radius: 6rpx;
+  color: $color-bg;
+  background-color: $color-primary;
+  border-radius: $radius-tag;
 }
 </style>

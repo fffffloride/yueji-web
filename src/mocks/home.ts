@@ -111,10 +111,27 @@ export const newUserCoupon = {
 };
 
 export const promoCards: PromoCard[] = [
-  { title: "L3 升级冲榜赛", sub: "领升级好礼\n享高阶权益", bg: "var(--yj-color-surface-rose)" },
-  { title: "活动专区", sub: "解锁变美礼遇", bg: "var(--yj-color-surface-warm)" },
-  { title: "悦己医疗团队", sub: "选择医生，选择安心", bg: "var(--yj-color-primary-tint)", badge: "NEW" },
-  { title: "姐妹众测", sub: "JOJO\n灵动胶原", bg: "var(--yj-color-surface-warm)" },
+  {
+    title: "L3 升级冲榜赛",
+    sub: "领升级好礼\n享高阶权益",
+    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-bg))",
+  },
+  {
+    title: "活动专区",
+    sub: "解锁变美礼遇",
+    bg: "linear-gradient(135deg, var(--yj-color-surface-warm), var(--yj-color-bg))",
+  },
+  {
+    title: "悦己医疗团队",
+    sub: "选择医生，选择安心",
+    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-bg))",
+    badge: "NEW",
+  },
+  {
+    title: "姐妹众测",
+    sub: "JOJO\n灵动胶原",
+    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-surface-warm))",
+  },
 ];
 
 export const hotTabs: string[] = ["全部", "水光抗衰", "光电抗衰", "注射抗衰", "皮肤管理"];
@@ -162,11 +179,31 @@ export const nearbyStore: NearbyStore = {
 };
 
 export const brandSections: BrandSection[] = [
-  { title: "品牌起源", sub: "关于悦己轻医美。", bg: "var(--yj-color-surface-warm)" },
-  { title: "合理定价", sub: "好的医美，\n也可以有好的价格。", bg: "var(--yj-color-surface-warm)" },
-  { title: "正品保障", sub: "使用正品，我们的底线。", bg: "var(--yj-color-surface-warm)" },
-  { title: "医生团队", sub: "相信他们，相信我们。", bg: "var(--yj-color-surface-warm)" },
-  { title: "安全保证", sub: "不妥协，不冒进。", bg: "var(--yj-color-surface-warm)" },
+  {
+    title: "品牌起源",
+    sub: "关于悦己轻医美。",
+    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-bg))",
+  },
+  {
+    title: "合理定价",
+    sub: "好的医美，\n也可以有好的价格。",
+    bg: "linear-gradient(135deg, var(--yj-color-surface-warm), var(--yj-color-bg))",
+  },
+  {
+    title: "正品保障",
+    sub: "使用正品，我们的底线。",
+    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-bg))",
+  },
+  {
+    title: "医生团队",
+    sub: "相信他们，相信我们。",
+    bg: "linear-gradient(135deg, var(--yj-color-surface-warm), var(--yj-color-primary-tint))",
+  },
+  {
+    title: "安全保证",
+    sub: "不妥协，不冒进。",
+    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-surface-warm))",
+  },
 ];
 
 /** 品牌故事文案。 */

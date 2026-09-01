@@ -17,12 +17,6 @@ export interface MemberInfo {
   progress: number;
   /** 待解锁进度文案，如「0/1」 */
   lockedText: string;
-  /** 挑战赛标题，如「L3会员挑战赛」 */
-  challengeTitle: string;
-  /** 赠送项目价值（分） */
-  challengeGift: number;
-  /** 挑战赛按钮文案 */
-  challengeButtonText: string;
   stats: MemberStat[];
 }
 
@@ -35,29 +29,9 @@ export interface QuickTool {
   icon?: string;
 }
 
-/** 邀请有礼奖励统计。 */
-export interface InviteStat {
-  label: string;
-  value: number;
-  /** 金额（分）还是普通数值 */
-  isMoney?: boolean;
-}
-
-/** 邀请有礼区块。 */
-export interface InviteInfo {
-  title: string;
-  detailText: string;
-  bannerText: string;
-  participantsText: string;
-  stats: InviteStat[];
-  buttonText: string;
-}
-
 /** 服务入口。 */
 export interface ServiceEntry {
   label: string;
-  /** wd-icon 图标名 */
-  icon: string;
 }
 
 /** 社群二维码卡。 */
@@ -66,23 +40,11 @@ export interface CommunityInfo {
   sub: string;
 }
 
-/** 专属服务群。 */
-export interface ServiceGroup {
-  title: string;
-  desc: string;
-  sub: string;
-  joinText: string;
-  benefits: string[];
-}
-
 /** 会员卡静态数据。 */
 export const mineMember: MemberInfo = {
   levelName: "悦己DLumière MEMBER",
   progress: 30,
   lockedText: "0/1",
-  challengeTitle: "L3会员挑战赛",
-  challengeGift: 69900,
-  challengeButtonText: "去报名",
   stats: [
     { label: "待预约", count: 0 },
     { label: "待到店", count: 0 },
@@ -90,48 +52,25 @@ export const mineMember: MemberInfo = {
   ],
 };
 
-/** 快捷工具（全部订单 / 礼品卡 / 钱包 / 积分）。 */
+/** 快捷工具（全部订单 / 优惠券 / 钱包 / 积分）。 */
 export const mineQuickTools: QuickTool[] = [
   { label: "全部订单", icon: "list" },
-  { label: "礼品卡", icon: "creditcard" },
+  { label: "优惠券", icon: "creditcard" },
   { label: "钱包", icon: "wallet" },
-  { label: "积分", value: "0" },
+  { label: "积分", icon: "star" },
 ];
 
-/** 邀请有礼。 */
-export const mineInvite: InviteInfo = {
-  title: "邀请有礼",
-  detailText: "了解详情",
-  bannerText: "送您 3000 元现金！",
-  participantsText: "7.8万人参与",
-  stats: [
-    { label: "无门槛优惠券", value: 0, isMoney: true },
-    { label: "现金奖励", value: 0, isMoney: true },
-    { label: "积分奖励", value: 0 },
-  ],
-  buttonText: "立即邀请",
-};
-
-/** 服务入口宫格。 */
+/** 服务入口列表。 */
 export const mineServices: ServiceEntry[] = [
-  { label: "病历签署", icon: "file" },
-  { label: "悦己圈", icon: "info-circle" },
-  { label: "核销有礼", icon: "gift" },
-  { label: "关于我们", icon: "help-circle" },
-  { label: "设置", icon: "setting" },
+  { label: "病历签署" },
+  { label: "悦己圈" },
+  { label: "核销有礼" },
+  { label: "关于我们" },
+  { label: "设置" },
 ];
 
 /** 社群二维码卡。 */
 export const mineCommunity: CommunityInfo = {
   title: "长按加入悦己同好社群",
   sub: "领50元券｜城市限定好价｜同城变美搭子",
-};
-
-/** 专属服务群。 */
-export const mineServiceGroup: ServiceGroup = {
-  title: "悦己专属服务群",
-  desc: "加入您的专属服务群",
-  sub: "每周三抢大额神券，多重惊喜",
-  joinText: "立即进群",
-  benefits: ["真实案例对比", "7x24小时智能服务", "术后护理指南", "生日礼·核销礼·专属优惠券"],
 };

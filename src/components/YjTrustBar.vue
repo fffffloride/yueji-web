@@ -4,27 +4,25 @@
       <YjLogo :size="28" />
       <text class="yj-trust-bar__brand-name">悦己DLumière</text>
     </view>
-    <view class="yj-trust-bar__viewport">
-      <view class="yj-trust-bar__track">
-        <text
-          v-for="(item, index) in duplicatedItems"
-          :key="index"
-          class="yj-trust-bar__item"
-        >
-          {{ item }}
-        </text>
-      </view>
-    </view>
+    <swiper
+      class="yj-trust-bar__viewport"
+      vertical
+      :circular="props.items.length > 1"
+      :autoplay="props.items.length > 1"
+      :interval="5000"
+      :duration="400"
+    >
+      <swiper-item v-for="item in props.items" :key="item">
+        <view class="yj-trust-bar__item">{{ item }}</view>
+      </swiper-item>
+    </swiper>
   </view>
 </template>
 
 <script setup lang="ts">
-/** 滚动信任条：品牌名 + 无缝横向滚动文案（双份列表 + translateX 循环）。 */
 const props = defineProps<{
   items: string[];
 }>();
-
-const duplicatedItems = computed(() => [...props.items, ...props.items]);
 </script>
 
 <style lang="scss" scoped>
@@ -56,28 +54,18 @@ const duplicatedItems = computed(() => [...props.items, ...props.items]);
 .yj-trust-bar__viewport {
   flex: 1;
   min-width: 0;
+  height: 40rpx;
   overflow: hidden;
 }
 
-.yj-trust-bar__track {
-  display: inline-flex;
-  white-space: nowrap;
-  animation: yj-trust-bar-scroll 20s linear infinite;
-}
-
 .yj-trust-bar__item {
-  padding-right: 80rpx;
+  height: 40rpx;
+  overflow: hidden;
   font-size: $font-size-xs;
+  line-height: 40rpx;
   color: $color-text-sub;
-}
-
-@keyframes yj-trust-bar-scroll {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(-50%);
-  }
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

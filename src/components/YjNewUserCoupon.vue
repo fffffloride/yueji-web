@@ -39,7 +39,8 @@ const emit = defineEmits<{
   gap: $spacing-md;
   align-items: center;
   padding: 24rpx $spacing-lg;
-  background-color: $color-primary-tint;
+  background: linear-gradient(135deg, $color-primary-tint, $color-bg);
+  border: 1rpx solid $color-line;
   border-radius: 32rpx;
 }
 
@@ -86,7 +87,7 @@ const emit = defineEmits<{
   font-weight: bold;
   color: $color-bg;
   text-align: center;
-  background-color: $color-primary;
+  background: linear-gradient(135deg, $color-primary-light, $color-primary-dark);
   border-radius: $radius-button;
 }
 </style>

@@ -3,6 +3,7 @@
     <view class="appointment-date-bar">
       <scroll-view
         class="appointment-date-bar__scroll"
+        :class="{ 'appointment-date-bar__scroll--dragging': dateDragging }"
         scroll-x
         :scroll-into-view="dateScrollIntoView"
         :show-scrollbar="false"
@@ -23,19 +24,15 @@
         </view>
       </scroll-view>
 
-      <picker
+      <view
         class="appointment-calendar"
-        mode="date"
-        :value="selectedDate"
-        :start="minDate"
-        :end="maxDate"
-        @change="handleCalendarChange"
+        @click="openCalendarDrawer"
       >
         <view class="appointment-calendar__content">
           <wd-icon name="calendar" size="42rpx" />
           <text>日历</text>
         </view>
-      </picker>
+      </view>
     </view>
 
     <view class="appointment-time-section">
@@ -80,23 +77,29 @@
 
       <view class="appointment-tip">预约成功后，如需调整到店时间请联系客服。</view>
     </view>
+
+    <AppointmentCalendarDrawer
+      v-model="calendarDrawerVisible"
+      :selected-date="selectedDate"
+      :min-date="minDate"
+      :max-date="maxDate"
+      @select="selectDate"
+    />
   </YjPage>
 </template>
 
 <script setup lang="ts">
+import { onBackPress } from "@dcloudio/uni-app";
 import AppointmentAPI from "@/api/appointment";
 import { RoutePath } from "@/constants";
 import { isLoggedIn } from "@/utils/auth";
 import { toLogin } from "@/utils/navigate";
+import AppointmentCalendarDrawer from "./components/AppointmentCalendarDrawer.vue";
 
 interface DateOption {
   value: string;
   caption: string;
   label: string;
-}
-
-interface PickerChangeEvent {
-  detail: { value: string };
 }
 
 const WEEK_LABELS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
@@ -112,18 +115,22 @@ const TIME_OPTIONS = [
   "18:00",
   "19:00",
 ];
-const BOOKABLE_DAYS = 90;
-
 const today = startOfDay(new Date());
 const tomorrow = addDays(today, 1);
+const maxBookableDate = addMonthsClamped(today, 2);
 const minDate = formatDateValue(tomorrow);
-const maxDate = formatDateValue(addDays(today, BOOKABLE_DAYS));
+const maxDate = formatDateValue(maxBookableDate);
 const selectedDate = ref(minDate);
 const selectedTime = ref("");
 const submitting = ref(false);
+const calendarDrawerVisible = ref(false);
 const dateScrollIntoView = ref(dateDomId(minDate));
+const dateDragging = ref(false);
+let dateDragStartX = 0;
+let dateDragStartScrollLeft = 0;
+let h5DateScrollElement: HTMLElement | null = null;
 const timeOptions = TIME_OPTIONS;
-const dateOptions = buildDateOptions(tomorrow, BOOKABLE_DAYS);
+const dateOptions = buildDateOptions(tomorrow, maxBookableDate);
 
 const selectedDateText = computed(() => {
   const current = dateOptions.find((date) => date.value === selectedDate.value);
@@ -140,6 +147,13 @@ function addDays(date: Date, days: number): Date {
   return result;
 }
 
+function addMonthsClamped(date: Date, months: number): Date {
+  const targetMonth = new Date(date.getFullYear(), date.getMonth() + months, 1);
+  const lastDay = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0).getDate();
+  targetMonth.setDate(Math.min(date.getDate(), lastDay));
+  return targetMonth;
+}
+
 function padNumber(value: number): string {
   return String(value).padStart(2, "0");
 }
@@ -148,19 +162,69 @@ function formatDateValue(date: Date): string {
   return `${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())}`;
 }
 
-function buildDateOptions(startDate: Date, count: number): DateOption[] {
-  return Array.from({ length: count }, (_, index) => {
-    const date = addDays(startDate, index);
-    return {
+function buildDateOptions(startDate: Date, endDate: Date): DateOption[] {
+  const options: DateOption[] = [];
+  let date = new Date(startDate);
+  let index = 0;
+  while (date <= endDate) {
+    options.push({
       value: formatDateValue(date),
       caption: `${date.getMonth() + 1}/${date.getDate()}`,
       label: index === 0 ? "明日" : WEEK_LABELS[date.getDay()],
-    };
-  });
+    });
+    date = addDays(date, 1);
+    index += 1;
+  }
+  return options;
 }
 
 function dateDomId(value: string): string {
   return `appointment-date-${value}`;
+}
+
+function startDateDrag(event: PointerEvent): void {
+  if (!h5DateScrollElement || event.pointerType !== "mouse" || event.button !== 0) return;
+  dateDragging.value = true;
+  dateDragStartX = event.clientX;
+  dateDragStartScrollLeft = h5DateScrollElement.scrollLeft;
+  dateScrollIntoView.value = "";
+  h5DateScrollElement.setPointerCapture(event.pointerId);
+  event.preventDefault();
+}
+
+function moveDateDrag(event: PointerEvent): void {
+  if (!dateDragging.value || !h5DateScrollElement) return;
+  h5DateScrollElement.scrollLeft = Math.max(
+    0,
+    dateDragStartScrollLeft - (event.clientX - dateDragStartX),
+  );
+}
+
+function endDateDrag(event: PointerEvent): void {
+  if (!dateDragging.value || !h5DateScrollElement) return;
+  h5DateScrollElement.releasePointerCapture(event.pointerId);
+  dateDragging.value = false;
+}
+
+function bindH5DateDrag(): void {
+  const elements = document.querySelectorAll<HTMLElement>(
+    ".appointment-date-bar__scroll .uni-scroll-view",
+  );
+  h5DateScrollElement = Array.from(elements).find(
+    (element) => element.scrollWidth > element.clientWidth,
+  ) ?? null;
+  h5DateScrollElement?.addEventListener("pointerdown", startDateDrag);
+  h5DateScrollElement?.addEventListener("pointermove", moveDateDrag);
+  h5DateScrollElement?.addEventListener("pointerup", endDateDrag);
+  h5DateScrollElement?.addEventListener("pointercancel", endDateDrag);
+}
+
+function unbindH5DateDrag(): void {
+  h5DateScrollElement?.removeEventListener("pointerdown", startDateDrag);
+  h5DateScrollElement?.removeEventListener("pointermove", moveDateDrag);
+  h5DateScrollElement?.removeEventListener("pointerup", endDateDrag);
+  h5DateScrollElement?.removeEventListener("pointercancel", endDateDrag);
+  h5DateScrollElement = null;
 }
 
 function selectDate(value: string): void {
@@ -170,8 +234,8 @@ function selectDate(value: string): void {
   dateScrollIntoView.value = dateDomId(value);
 }
 
-function handleCalendarChange(event: PickerChangeEvent): void {
-  selectDate(event.detail.value);
+function openCalendarDrawer(): void {
+  calendarDrawerVisible.value = true;
 }
 
 async function submitAppointment(): Promise<void> {
@@ -199,6 +263,17 @@ async function submitAppointment(): Promise<void> {
     submitting.value = false;
   }
 }
+
+onBackPress(() => {
+  if (!calendarDrawerVisible.value) return false;
+  calendarDrawerVisible.value = false;
+  return true;
+});
+
+// #ifdef H5
+onMounted(() => nextTick(bindH5DateDrag));
+onBeforeUnmount(unbindH5DateDrag);
+// #endif
 </script>
 
 <style lang="scss" scoped>
@@ -224,6 +299,12 @@ async function submitAppointment(): Promise<void> {
     min-width: 0;
     height: 122rpx;
     white-space: nowrap;
+    cursor: grab;
+    user-select: none;
+
+    &--dragging {
+      cursor: grabbing;
+    }
   }
 
   &__list {

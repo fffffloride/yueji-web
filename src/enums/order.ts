@@ -1,38 +1,32 @@
-/** 订单状态，对应需求 3.6.2 订单管理。 */
+/** 订单状态，与服务端 OrderStatus 数值保持一致。 */
 export enum OrderStatusEnum {
   /** 待付款 */
-  UNPAID = "UNPAID",
-  /** 已付款 */
-  PAID = "PAID",
-  /** 待核销 */
-  PENDING_VERIFY = "PENDING_VERIFY",
+  UNPAID = 0,
+  /** 已付款待核销，服务端当前合并为同一状态。 */
+  PAID = 1,
   /** 已核销 */
-  VERIFIED = "VERIFIED",
+  VERIFIED = 2,
   /** 已完成 */
-  COMPLETED = "COMPLETED",
-  /** 已转赠 */
-  GIFTED = "GIFTED",
+  COMPLETED = 3,
   /** 已取消 */
-  CANCELLED = "CANCELLED",
+  CANCELLED = 4,
+  /** 已退款 */
+  REFUNDED = 5,
 }
 
 export const ORDER_STATUS_LABEL: Record<OrderStatusEnum, string> = {
   [OrderStatusEnum.UNPAID]: "待付款",
-  [OrderStatusEnum.PAID]: "已付款",
-  [OrderStatusEnum.PENDING_VERIFY]: "待核销",
+  [OrderStatusEnum.PAID]: "待核销",
   [OrderStatusEnum.VERIFIED]: "已核销",
   [OrderStatusEnum.COMPLETED]: "已完成",
-  [OrderStatusEnum.GIFTED]: "转赠",
   [OrderStatusEnum.CANCELLED]: "已取消",
+  [OrderStatusEnum.REFUNDED]: "已退款",
 };
 
-/** 订单列表页顶部的状态筛选项，顺序与需求文档一致。 */
-export const ORDER_STATUS_TABS = [
-  { value: "", label: "全部" },
-  { value: OrderStatusEnum.UNPAID, label: ORDER_STATUS_LABEL.UNPAID },
-  { value: OrderStatusEnum.PAID, label: ORDER_STATUS_LABEL.PAID },
-  { value: OrderStatusEnum.PENDING_VERIFY, label: ORDER_STATUS_LABEL.PENDING_VERIFY },
-  { value: OrderStatusEnum.VERIFIED, label: ORDER_STATUS_LABEL.VERIFIED },
-  { value: OrderStatusEnum.COMPLETED, label: ORDER_STATUS_LABEL.COMPLETED },
-  { value: OrderStatusEnum.GIFTED, label: ORDER_STATUS_LABEL.GIFTED },
+/** 订单列表页顶部的核心状态筛选项。已核销为内部过渡状态，不单独展示。 */
+export const ORDER_STATUS_TABS: { label: string; value?: OrderStatusEnum }[] = [
+  { label: "全部" },
+  { value: OrderStatusEnum.UNPAID, label: ORDER_STATUS_LABEL[OrderStatusEnum.UNPAID] },
+  { value: OrderStatusEnum.PAID, label: ORDER_STATUS_LABEL[OrderStatusEnum.PAID] },
+  { value: OrderStatusEnum.COMPLETED, label: ORDER_STATUS_LABEL[OrderStatusEnum.COMPLETED] },
 ];
