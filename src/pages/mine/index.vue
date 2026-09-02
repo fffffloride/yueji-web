@@ -6,8 +6,6 @@
         :account="memberAccount"
         :nickname="userStore.userInfo.nickname"
         :logged-in="userStore.isLoggedIn"
-        @more="handleComingSoon"
-        @scan="handleComingSoon"
         @login="handleEntryClick(RoutePath.USER_MEMBER)"
         @member="handleEntryClick(RoutePath.USER_MEMBER)"
         @unlock="handleEntryClick(RoutePath.USER_MEMBER)"
@@ -210,10 +208,6 @@ function handleQuickTool(index: number) {
 function handleServiceSelect(index: number) {
   const route = SERVICE_ROUTES[index];
   if (route) handleEntryClick(route.path, route.requireAuth);
-}
-
-function handleComingSoon() {
-  uni.showToast({ title: "敬请期待", icon: "none" });
 }
 
 async function loadMemberAccount() {

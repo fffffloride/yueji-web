@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { memberLevelProgress } from "../src/utils/member-level.ts";
+import { memberLevelProgress, memberTierTone } from "../src/utils/member-level.ts";
 
 const account = {
   points: 0,
@@ -26,5 +26,10 @@ assert.equal(memberLevelProgress(account), 50);
 assert.equal(memberLevelProgress({ ...account, totalSpent: 5_000_000 }), 100);
 assert.equal(memberLevelProgress({ ...account, nextLevel: null }), 100);
 assert.equal(memberLevelProgress(null), 0);
+assert.equal(memberTierTone(" l1 "), "l1");
+assert.equal(memberTierTone("L4"), "l4");
+assert.equal(memberTierTone("L5"), "custom");
+assert.equal(memberTierTone("VIP"), "custom");
+assert.equal(memberTierTone(null), "guest");
 
 console.log("member level checks passed");
