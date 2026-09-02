@@ -1,25 +1,8 @@
 <template>
   <view class="mine-member">
-    <!-- Hero：浅灰渐变 + 水泡装饰 -->
+    <!-- Hero：雾绿晨光背景 -->
     <view class="mine-member__hero">
-      <view
-        v-for="(bubble, index) in bubbles"
-        :key="index"
-        class="mine-member__bubble"
-        :style="{
-          width: `${bubble.w}rpx`,
-          height: `${bubble.h}rpx`,
-          top: `${bubble.t}rpx`,
-          left: bubble.l !== undefined ? `${bubble.l}rpx` : undefined,
-          right: bubble.r !== undefined ? `${bubble.r}rpx` : undefined,
-          opacity: bubble.o,
-        }"
-      />
       <view class="mine-member__nav">
-        <view class="mine-member__consult" @click="emit('consult')">
-          <wd-icon name="chat" size="24rpx" />
-          <text>咨询/预约</text>
-        </view>
         <view class="mine-member__actions">
           <view class="mine-member__action-btn" @click="emit('more')">
             <wd-icon name="ellipsis" size="32rpx" />
@@ -86,7 +69,6 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (e: "consult"): void;
   (e: "more"): void;
   (e: "scan"): void;
   (e: "login"): void;
@@ -94,23 +76,6 @@ const emit = defineEmits<{
   (e: "unlock"): void;
   (e: "stat", index: number): void;
 }>();
-
-/** 水泡装饰位置（设计稿 px 已换算为 rpx）。 */
-interface BubbleStyle {
-  w: number;
-  h: number;
-  t: number;
-  l?: number;
-  r?: number;
-  o: number;
-}
-
-const bubbles: BubbleStyle[] = [
-  { w: 220, h: 220, t: -40, l: -40, o: 0.35 },
-  { w: 160, h: 160, t: 20, l: 100, o: 0.2 },
-  { w: 120, h: 120, t: -20, r: 80, o: 0.25 },
-  { w: 180, h: 180, t: 60, r: -40, o: 0.3 },
-];
 
 /** 未登录点昵称区走登录，已登录进会员中心。 */
 function handleProfileClick() {
@@ -125,16 +90,35 @@ function handleProfileClick() {
 <style lang="scss" scoped>
 .mine-member__hero {
   position: relative;
-  height: 280rpx;
+  height: 320rpx;
   overflow: hidden;
-  background: linear-gradient(160deg, $color-surface-gray 0%, $color-surface-gray-light 100%);
-}
+  background:
+    radial-gradient(circle at 86% 8%, rgba($color-primary-lighter, 0.24), transparent 34%),
+    linear-gradient(155deg, #dce8e0 0%, #eef4f0 58%, $color-bg-page 100%);
 
-.mine-member__bubble {
-  position: absolute;
-  background: radial-gradient(circle at 35% 35%, rgb(255 255 255 / 50%), transparent 70%);
-  border: 2rpx solid rgb(255 255 255 / 60%);
-  border-radius: 50%;
+  &::before,
+  &::after {
+    position: absolute;
+    content: "";
+    border-radius: 50%;
+  }
+
+  &::before {
+    top: -220rpx;
+    left: -110rpx;
+    width: 420rpx;
+    height: 420rpx;
+    border: 2rpx solid rgba($color-bg, 0.66);
+    box-shadow: 0 0 80rpx rgba($color-bg, 0.32) inset;
+  }
+
+  &::after {
+    top: -110rpx;
+    right: 40rpx;
+    width: 260rpx;
+    height: 260rpx;
+    border: 2rpx solid rgba($color-bg, 0.42);
+  }
 }
 
 .mine-member__nav {
@@ -144,20 +128,8 @@ function handleProfileClick() {
   left: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 24rpx 32rpx 0;
-}
-
-.mine-member__consult {
-  display: flex;
-  gap: $spacing-xs;
-  align-items: center;
-  padding: 12rpx 24rpx;
-  font-size: $font-size-sm;
-  color: $color-text-content;
-  background: rgb(255 255 255 / 80%);
-  border-radius: $radius-button;
-  box-shadow: 0 2rpx 8rpx rgb(0 0 0 / 6%);
 }
 
 .mine-member__actions {
@@ -172,10 +144,12 @@ function handleProfileClick() {
   justify-content: center;
   width: 56rpx;
   height: 56rpx;
-  color: $color-text-content;
-  background: rgb(255 255 255 / 80%);
+  color: $color-primary-dark;
+  background: rgba($color-bg, 0.78);
+  backdrop-filter: blur(12rpx);
+  border: 2rpx solid rgba($color-bg, 0.82);
   border-radius: 50%;
-  box-shadow: 0 2rpx 8rpx rgb(0 0 0 / 6%);
+  box-shadow: 0 8rpx 24rpx rgba($color-primary-dark, 0.08);
 }
 
 // 视觉保持 56rpx，点击区扩到 88rpx（小程序点击舒适最小值）
@@ -188,10 +162,13 @@ function handleProfileClick() {
 .mine-member__card {
   position: relative;
   padding: 40rpx 40rpx 0;
-  margin: -80rpx 24rpx 0;
+  margin: -118rpx 24rpx 0;
   overflow: hidden;
-
-  @include card;
+  background: rgba($color-bg, 0.94);
+  backdrop-filter: blur(18rpx);
+  border: 2rpx solid rgba($color-bg, 0.9);
+  border-radius: 28rpx;
+  box-shadow: 0 20rpx 54rpx rgba($color-primary-dark, 0.1);
 }
 
 .mine-member__nickname {
