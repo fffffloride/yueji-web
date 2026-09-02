@@ -67,14 +67,20 @@ export interface PointsRule {
   maxDeductRate: number;
 }
 
+export interface MemberLevelAccountItem {
+  id: string;
+  name: string;
+  code: string;
+  thresholdAmount: number;
+  discountRate: number;
+}
+
 export interface PointsAccount {
   points: number;
   totalSpent: number;
-  level: {
-    id: string;
-    name: string;
-    discountRate: number;
-  } | null;
+  level: MemberLevelAccountItem | null;
+  nextLevel: MemberLevelAccountItem | null;
+  levels: MemberLevelAccountItem[];
   rule: PointsRule;
 }
 

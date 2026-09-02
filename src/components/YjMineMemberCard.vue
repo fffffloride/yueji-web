@@ -42,20 +42,14 @@
       <view class="mine-member__progress" @click="emit('unlock')">
         <view class="mine-member__progress-row">
           <view class="mine-member__level">
-            <text
-              v-for="line in member.levelName.split(' ')"
-              :key="line"
-              class="mine-member__level-line"
-            >
-              {{ line }}
-            </text>
+            {{ account?.level?.name || (loggedIn ? "会员等级" : "悦己会员") }}
           </view>
           <view class="mine-member__track">
-            <view class="mine-member__fill" :style="{ width: `${member.progress}%` }" />
+            <view class="mine-member__fill" :style="{ width: `${memberLevelProgress(account)}%` }" />
           </view>
         </view>
         <view class="mine-member__lock">
-          <text>Lock待解锁{{ member.lockedText }}</text>
+          <text>{{ account?.level?.code || "—" }}</text>
           <wd-icon name="chevron-right" size="24rpx" />
         </view>
       </view>
@@ -77,15 +71,18 @@
 </template>
 
 <script setup lang="ts">
+import type { PointsAccount } from "@/api/marketing";
 import type { MemberInfo } from "@/mocks/mine";
+import { memberLevelProgress } from "@/utils/member-level";
 
 const props = withDefaults(
   defineProps<{
     member: MemberInfo;
+    account?: PointsAccount | null;
     nickname: string;
     loggedIn?: boolean;
   }>(),
-  { loggedIn: false }
+  { account: null, loggedIn: false }
 );
 
 const emit = defineEmits<{
@@ -223,15 +220,13 @@ function handleProfileClick() {
 }
 
 .mine-member__level {
-  display: flex;
-  flex-direction: column;
-}
-
-.mine-member__level-line {
-  font-size: 20rpx; // 设计稿 10px
-  font-weight: 700;
-  line-height: 1.2;
+  flex: 0 1 160rpx;
+  overflow: hidden;
+  font-size: $font-size-sm;
+  font-weight: 600;
   color: $color-text-title;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mine-member__track {

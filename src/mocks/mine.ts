@@ -11,12 +11,6 @@ export interface MemberStat {
 
 /** 会员卡信息。 */
 export interface MemberInfo {
-  /** 会员等级文案，如「悦己DLumière MEMBER」 */
-  levelName: string;
-  /** 等级进度 0-100 */
-  progress: number;
-  /** 待解锁进度文案，如「0/1」 */
-  lockedText: string;
   stats: MemberStat[];
 }
 
@@ -42,9 +36,6 @@ export interface CommunityInfo {
 
 /** 会员卡静态数据。 */
 export const mineMember: MemberInfo = {
-  levelName: "悦己DLumière MEMBER",
-  progress: 30,
-  lockedText: "0/1",
   stats: [
     { label: "待预约", count: 0 },
     { label: "待到店", count: 0 },

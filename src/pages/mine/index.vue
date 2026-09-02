@@ -2,6 +2,7 @@
   <YjPage :tabbar="RoutePath.MINE" :padded="false">
     <YjMineMemberCard
       :member="mineMember"
+      :account="memberAccount"
       :nickname="userStore.userInfo.nickname"
       :logged-in="userStore.isLoggedIn"
       @consult="handleConsult"
@@ -34,6 +35,7 @@
 
 <script setup lang="ts">
 import { useMessage } from "wot-design-uni";
+import MarketingAPI, { type PointsAccount } from "@/api/marketing";
 import { RoutePath } from "@/constants";
 import { mineMember, mineQuickTools, mineServices } from "@/mocks/mine";
 import { useUserStore } from "@/stores/user";
@@ -41,6 +43,7 @@ import { navigate } from "@/utils/navigate";
 
 const userStore = useUserStore();
 const message = useMessage();
+const memberAccount = ref<PointsAccount | null>(null);
 
 /** 快捷工具对应路由，顺序与 mineQuickTools 一致。 */
 const QUICK_TOOL_ROUTES = [
@@ -87,6 +90,18 @@ function handleComingSoon() {
   uni.showToast({ title: "敬请期待", icon: "none" });
 }
 
+async function loadMemberAccount() {
+  if (!userStore.isLoggedIn) {
+    memberAccount.value = null;
+    return;
+  }
+  try {
+    memberAccount.value = await MarketingAPI.getPointsAccount();
+  } catch {
+    memberAccount.value = null;
+  }
+}
+
 /** 退出登录：二次确认后清空登录态。 */
 async function handleLogout() {
   const result = await message.confirm({
@@ -102,6 +117,10 @@ async function handleLogout() {
     uni.showToast({ title: "已退出登录", icon: "none" });
   }
 }
+
+onShow(() => {
+  void loadMemberAccount();
+});
 </script>
 
 <style lang="scss" scoped>
