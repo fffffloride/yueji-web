@@ -4,7 +4,10 @@
     <view class="home-platform-nav">悦己DLumière</view>
     <!-- #endif -->
 
-    <view v-if="isDecorationLoading && !homeDecoration.banners.length" class="home-decoration-status">
+    <view
+      v-if="isDecorationLoading && !homeDecoration.banners.length"
+      class="home-decoration-status"
+    >
       <wd-loading />
       <text>正在加载首页内容</text>
     </view>
@@ -38,7 +41,7 @@
 
       <!-- Hero 悬浮操作 -->
       <view class="home-hero__nav" :style="heroNavStyle">
-        <view class="home-hero__consult" @click="navigate(RoutePath.APPOINTMENT)">
+        <view class="home-hero__consult" @click="openAppointmentDrawer">
           <wd-icon name="chat" size="24rpx" />
           <text>咨询/预约</text>
         </view>
@@ -95,7 +98,7 @@
       </view>
 
       <!-- 免费面诊 CTA -->
-      <view class="home-section home-consult card" @click="navigate(RoutePath.APPOINTMENT)">
+      <view class="home-section home-consult card" @click="openAppointmentDrawer">
         <view class="home-consult__info">
           <view class="home-consult__title">
             <text class="home-consult__name">免费预约面诊</text>
@@ -125,28 +128,31 @@
         <view class="home-brand-section__button">了解详情</view>
       </view>
     </view>
+
+    <YjAppointmentDrawer
+      v-model:visible="appointmentDrawerVisible"
+      @success="handleAppointmentSuccess"
+    />
   </YjPage>
 </template>
 
 <script setup lang="ts">
+import { AppointmentTab, PRIMARY_APPOINTMENT_TABS } from "@/api/appointment";
 import DecorationAPI, { type HomeBanner, type HomeDecoration } from "@/api/decoration";
 import { RoutePath } from "@/constants";
-import {
-  brandSections,
-  newUserCoupon,
-  promoCards,
-  quickEntries,
-} from "@/mocks/home";
-import { isLoggedIn as checkLoggedIn } from "@/utils/auth";
-import { navigate } from "@/utils/navigate";
+import { brandSections, newUserCoupon, promoCards, quickEntries } from "@/mocks/home";
+import { useUserStore } from "@/stores/user";
+import { consumeTabBarParams, navigate } from "@/utils/navigate";
 
+const userStore = useUserStore();
 const heroIndex = ref(0);
 const homeDecoration = ref<HomeDecoration>({ banners: [], notices: [], brandContent: "" });
 const failedBannerIds = ref<string[]>([]);
 const isDecorationLoading = ref(false);
 const decorationLoadError = ref("");
+const appointmentDrawerVisible = ref(false);
 const heroNavStyle = getHeroNavStyle();
-const isLoggedIn = computed(() => checkLoggedIn());
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 const trustItems = computed(() =>
   homeDecoration.value.notices.map((notice) => notice.title.trim()).filter(Boolean)
 );
@@ -199,13 +205,37 @@ async function loadDecoration() {
   }
 }
 
-/** 快捷入口：前三项进入现有预约页，加入社群暂未开放。 */
+/** 快捷入口：前三项进入对应预约列表，加入社群暂未开放。 */
 function handleQuickEntry(index: number) {
   if (index === 3) {
     handleComingSoon();
     return;
   }
-  navigate(RoutePath.APPOINTMENT, { requireAuth: true });
+  const tab = PRIMARY_APPOINTMENT_TABS[index];
+  if (tab) navigate(RoutePath.APPOINTMENT, { requireAuth: true, params: { tab } });
+}
+
+function openAppointmentDrawer() {
+  if (!userStore.isLoggedIn) {
+    navigate(RoutePath.HOME, {
+      requireAuth: true,
+      params: { openAppointment: 1 },
+    });
+    return;
+  }
+  appointmentDrawerVisible.value = true;
+}
+
+async function handleAppointmentSuccess() {
+  const { confirm } = await uni.showModal({
+    title: "预约成功",
+    content: "已为你保留到店时间，可在我的预约中查看或改期。",
+    cancelText: "留在首页",
+    confirmText: "查看预约",
+  });
+  if (confirm) {
+    navigate(RoutePath.APPOINTMENT, { params: { tab: AppointmentTab.PENDING_ARRIVAL } });
+  }
 }
 
 /** 新人券：未登录去登录，已登录去券包。 */
@@ -223,6 +253,13 @@ function handleComingSoon() {
 
 onLoad(() => {
   void loadDecoration();
+});
+
+onShow(() => {
+  const params = consumeTabBarParams(RoutePath.HOME);
+  if (params?.openAppointment === "1" && userStore.isLoggedIn) {
+    appointmentDrawerVisible.value = true;
+  }
 });
 
 onPullDownRefresh(async () => {

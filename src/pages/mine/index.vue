@@ -2,7 +2,7 @@
   <YjPage :tabbar="RoutePath.MINE" :padded="false">
     <view class="mine-page">
       <YjMineMemberCard
-        :member="mineMember"
+        :member="mineMemberData"
         :account="memberAccount"
         :nickname="userStore.userInfo.nickname"
         :logged-in="userStore.isLoggedIn"
@@ -50,17 +50,27 @@
         </view>
       </movable-view>
     </movable-area>
+
+    <YjAppointmentDrawer
+      v-model:visible="appointmentDrawerVisible"
+      @success="handleAppointmentSuccess"
+    />
   </YjPage>
 </template>
 
 <script setup lang="ts">
 import { useMessage } from "wot-design-uni";
+import AppointmentAPI, {
+  AppointmentTab,
+  PRIMARY_APPOINTMENT_TABS,
+  type AppointmentSummary,
+} from "@/api/appointment";
 import MarketingAPI, { type PointsAccount } from "@/api/marketing";
 import { RoutePath } from "@/constants";
-import { mineMember, mineQuickTools, mineServices } from "@/mocks/mine";
+import { mineQuickTools, mineServices, type MemberInfo } from "@/mocks/mine";
 import { useUserStore } from "@/stores/user";
 import { snapToHorizontalEdge } from "@/utils/floating-action";
-import { navigate } from "@/utils/navigate";
+import { consumeTabBarParams, navigate } from "@/utils/navigate";
 
 interface ElementRect {
   height?: number;
@@ -80,6 +90,8 @@ const userStore = useUserStore();
 const message = useMessage();
 const instance = getCurrentInstance();
 const memberAccount = ref<PointsAccount | null>(null);
+const appointmentSummary = ref<AppointmentSummary | null>(null);
+const appointmentDrawerVisible = ref(false);
 const consultX = ref(CONSULT_INITIAL_POSITION);
 const consultY = ref(CONSULT_INITIAL_POSITION);
 
@@ -95,6 +107,14 @@ let suppressNextClick = false;
 let suppressTimer: ReturnType<typeof setTimeout> | undefined;
 let snapTimer: ReturnType<typeof setTimeout> | undefined;
 let consultMeasured = false;
+
+const mineMemberData = computed<MemberInfo>(() => ({
+  stats: [
+    { label: "待预约", count: appointmentSummary.value?.pendingBooking ?? "—" },
+    { label: "待到店", count: appointmentSummary.value?.pendingArrival ?? "—" },
+    { label: "服务记录", count: appointmentSummary.value?.serviceRecord ?? "—" },
+  ],
+}));
 
 /** 快捷工具对应路由，顺序与 mineQuickTools 一致。 */
 const QUICK_TOOL_ROUTES = [
@@ -119,7 +139,14 @@ function handleEntryClick(path: string, requireAuth = true) {
 }
 
 function handleConsult() {
-  navigate(RoutePath.APPOINTMENT);
+  if (!userStore.isLoggedIn) {
+    navigate(RoutePath.MINE, {
+      requireAuth: true,
+      params: { openAppointment: 1 },
+    });
+    return;
+  }
+  appointmentDrawerVisible.value = true;
 }
 
 function resetConsultPosition() {
@@ -195,9 +222,9 @@ function handleConsultClick() {
   handleConsult();
 }
 
-/** 统计项：仅「待预约」进入现有预约页，其余照设计稿无动作。 */
 function handleStatClick(index: number) {
-  if (index === 0) handleEntryClick(RoutePath.APPOINTMENT);
+  const tab = PRIMARY_APPOINTMENT_TABS[index];
+  if (tab) navigate(RoutePath.APPOINTMENT, { requireAuth: true, params: { tab } });
 }
 
 function handleQuickTool(index: number) {
@@ -222,6 +249,31 @@ async function loadMemberAccount() {
   }
 }
 
+async function loadAppointmentSummary() {
+  if (!userStore.isLoggedIn) {
+    appointmentSummary.value = null;
+    return;
+  }
+  try {
+    appointmentSummary.value = await AppointmentAPI.getSummary();
+  } catch {
+    appointmentSummary.value = null;
+  }
+}
+
+async function handleAppointmentSuccess() {
+  await loadAppointmentSummary();
+  const { confirm } = await uni.showModal({
+    title: "预约成功",
+    content: "已为你保留到店时间。",
+    cancelText: "留在当前页",
+    confirmText: "查看预约",
+  });
+  if (confirm) {
+    navigate(RoutePath.APPOINTMENT, { params: { tab: AppointmentTab.PENDING_ARRIVAL } });
+  }
+}
+
 /** 退出登录：二次确认后清空登录态。 */
 async function handleLogout() {
   const result = await message.confirm({
@@ -234,12 +286,17 @@ async function handleLogout() {
   });
   if (result.action === "confirm") {
     userStore.logout();
+    appointmentSummary.value = null;
     uni.showToast({ title: "已退出登录", icon: "none" });
   }
 }
 
 onShow(() => {
-  void loadMemberAccount();
+  void Promise.all([loadMemberAccount(), loadAppointmentSummary()]);
+  const params = consumeTabBarParams(RoutePath.MINE);
+  if (params?.openAppointment === "1" && userStore.isLoggedIn) {
+    appointmentDrawerVisible.value = true;
+  }
   resetConsultPosition();
 });
 

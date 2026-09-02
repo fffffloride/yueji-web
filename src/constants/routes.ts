@@ -21,7 +21,6 @@ export const RoutePath = {
   DOCTOR_LIST: "/pages-sub/appointment/doctor-list/index",
   DOCTOR_DETAIL: "/pages-sub/appointment/doctor-detail/index",
   BOOKING: "/pages-sub/appointment/booking/index",
-  MY_APPOINTMENT: "/pages-sub/appointment/my-list/index",
 
   USER_PROFILE: "/pages-sub/user/profile/index",
   USER_WALLET: "/pages-sub/user/wallet/index",

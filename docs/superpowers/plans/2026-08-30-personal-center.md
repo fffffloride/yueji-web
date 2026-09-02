@@ -25,6 +25,7 @@
 ### Task 1: 路由常量与 4 个占位页
 
 **Files:**
+
 - Modify: `src/constants/routes.ts`
 - Modify: `src/pages.json`
 - Create: `src/pages-sub/user/gift-card/index.vue`
@@ -33,6 +34,7 @@
 - Create: `src/pages-sub/user/verify-gift/index.vue`
 
 **Interfaces:**
+
 - Consumes: 无（第一个任务）
 - Produces: 4 个新 `RoutePath` 常量，后续任务与页面导航引用：
   - `RoutePath.USER_GIFT_CARD` = `/pages-sub/user/gift-card/index`
@@ -63,10 +65,10 @@
 在 `src/pages.json` 的 `pages-sub/user` 分包 `pages` 数组中，找到：
 
 ```json
-        {
-          "path": "help/index",
-          "style": { "navigationBarTitleText": "帮助与客服" }
-        }
+{
+  "path": "help/index",
+  "style": { "navigationBarTitleText": "帮助与客服" }
+}
 ```
 
 替换为：
@@ -103,11 +105,7 @@
   <YjPage>
     <YjPlaceholder
       title="礼品卡"
-      :points="[
-        '礼品卡列表与余额展示',
-        '绑定 / 赠送礼品卡',
-        '卡面二维码核销',
-      ]"
+      :points="['礼品卡列表与余额展示', '绑定 / 赠送礼品卡', '卡面二维码核销']"
     />
   </YjPage>
 </template>
@@ -118,13 +116,7 @@
 ```vue
 <template>
   <YjPage>
-    <YjPlaceholder
-      title="病历签署"
-      :points="[
-        '查看历史病历',
-        '在线签署病历授权',
-      ]"
-    />
+    <YjPlaceholder title="病历签署" :points="['查看历史病历', '在线签署病历授权']" />
   </YjPage>
 </template>
 ```
@@ -134,13 +126,7 @@
 ```vue
 <template>
   <YjPage>
-    <YjPlaceholder
-      title="悦己圈"
-      :points="[
-        '社区动态浏览',
-        '发布与互动',
-      ]"
-    />
+    <YjPlaceholder title="悦己圈" :points="['社区动态浏览', '发布与互动']" />
   </YjPage>
 </template>
 ```
@@ -150,13 +136,7 @@
 ```vue
 <template>
   <YjPage>
-    <YjPlaceholder
-      title="核销有礼"
-      :points="[
-        '到店核销流程',
-        '核销奖励领取',
-      ]"
-    />
+    <YjPlaceholder title="核销有礼" :points="['到店核销流程', '核销奖励领取']" />
   </YjPage>
 </template>
 ```
@@ -181,9 +161,11 @@ git commit -m "feat(user): 个人中心新增礼品卡/病历签署/悦己圈/�
 ### Task 2: Mock 数据模块
 
 **Files:**
+
 - Create: `src/mocks/mine.ts`
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: 以下类型与常量被 Task 3-8 引用（名称与字段必须完全一致）：
   - 类型：`MemberStat`、`MemberInfo`、`QuickTool`、`InviteStat`、`InviteInfo`、`ServiceEntry`、`CommunityInfo`、`ServiceGroup`
@@ -348,11 +330,13 @@ git commit -m "feat(user): 个人中心 mock 数据模型与静态数据"
 ### Task 3: YjMineMemberCard 组件（Hero + 会员卡）+ 灰阶 token
 
 **Files:**
+
 - Create: `src/components/YjMineMemberCard.vue`
 - Modify: `src/styles/variables.scss`（追加 2 个灰阶变量）
 - Modify: `src/styles/common.scss`（追加 2 个对应 CSS 自定义属性）
 
 **Interfaces:**
+
 - Consumes: `MemberInfo`、`MemberStat`（`@/mocks/mine`，Task 2）；`formatPrice`（`@/utils/format`）
 - Produces: 组件 `YjMineMemberCard`，props/emits 被 Task 8 引用：
   - Props：`member: MemberInfo`、`nickname: string`、`loggedIn?: boolean`（默认 false）
@@ -372,8 +356,8 @@ $color-surface-gray-light: #e8eaec; // 极浅灰（个人中心 Hero 渐变收�
 在 `src/styles/common.scss` 的 `--yj-color-surface-rose: #{$color-surface-rose};` 之后追加：
 
 ```scss
-  --yj-color-surface-gray: #{$color-surface-gray};
-  --yj-color-surface-gray-light: #{$color-surface-gray-light};
+--yj-color-surface-gray: #{$color-surface-gray};
+--yj-color-surface-gray-light: #{$color-surface-gray-light};
 ```
 
 - [ ] **Step 3: 创建 src/components/YjMineMemberCard.vue**
@@ -713,9 +697,11 @@ git commit -m "feat(user): 个人中心会员卡组件（Hero+会员进度+L3挑
 ### Task 4: YjInviteCard 组件（邀请有礼）
 
 **Files:**
+
 - Create: `src/components/YjInviteCard.vue`
 
 **Interfaces:**
+
 - Consumes: `InviteInfo`（`@/mocks/mine`，Task 2）；`formatPrice`；`YjLogo`（easycom，props `size: number`）
 - Produces: 组件 `YjInviteCard`，被 Task 8 引用：
   - Props：`info: InviteInfo`
@@ -901,9 +887,11 @@ git commit -m "feat(user): 个人中心邀请有礼卡片组件"
 ### Task 5: YjMineServiceGrid 组件（服务入口宫格）
 
 **Files:**
+
 - Create: `src/components/YjMineServiceGrid.vue`
 
 **Interfaces:**
+
 - Consumes: `ServiceEntry`（`@/mocks/mine`，Task 2）
 - Produces: 组件 `YjMineServiceGrid`，被 Task 8 引用：
   - Props：`items: ServiceEntry[]`
@@ -977,9 +965,11 @@ git commit -m "feat(user): 个人中心服务入口宫格组件"
 ### Task 6: YjCommunityCard 组件（社群二维码卡）
 
 **Files:**
+
 - Create: `src/components/YjCommunityCard.vue`
 
 **Interfaces:**
+
 - Consumes: `CommunityInfo`（`@/mocks/mine`，Task 2）
 - Produces: 组件 `YjCommunityCard`，被 Task 8 引用：
   - Props：`info: CommunityInfo`
@@ -1067,9 +1057,11 @@ git commit -m "feat(user): 个人中心社群二维码卡片组件"
 ### Task 7: YjServiceGroupCard 组件（专属服务群）
 
 **Files:**
+
 - Create: `src/components/YjServiceGroupCard.vue`
 
 **Interfaces:**
+
 - Consumes: `ServiceGroup`（`@/mocks/mine`，Task 2）
 - Produces: 组件 `YjServiceGroupCard`，被 Task 8 引用：
   - Props：`group: ServiceGroup`
@@ -1206,9 +1198,11 @@ git commit -m "feat(user): 个人中心专属服务群卡片组件"
 ### Task 8: 重写 mine/index.vue 装配页面
 
 **Files:**
+
 - Modify: `src/pages/mine/index.vue`（整文件重写，删除 YjPlaceholder 骨架与旧订单入口）
 
 **Interfaces:**
+
 - Consumes: Task 1 的 `RoutePath` 新常量；Task 2 的 6 个 mock 常量；Task 3-7 的 5 个组件；`useUserStore`（`@/stores/user`，含 `isLoggedIn` / `userInfo.nickname` / `logout()`）；`navigate`（`@/utils/navigate`）；`useMessage`（`wot-design-uni` 根导出，`confirm` 返回 `Promise<{ action: "confirm" | "cancel" | "modal" }>`）
 - Produces: 完整的「我的」页，后续无任务依赖
 
@@ -1320,9 +1314,10 @@ function handleConsult() {
   navigate(RoutePath.APPOINTMENT);
 }
 
-/** 统计项：仅「待预约」有跳转，其余照设计稿无动作。 */
+/** 统计项进入预约 TabBar 的对应状态。 */
 function handleStatClick(index: number) {
-  if (index === 0) handleEntryClick(RoutePath.MY_APPOINTMENT);
+  const tab = PRIMARY_APPOINTMENT_TABS[index];
+  if (tab) navigate(RoutePath.APPOINTMENT, { requireAuth: true, params: { tab } });
 }
 
 function handleQuickTool(index: number) {
@@ -1388,6 +1383,7 @@ git commit -m "feat(user): 个人中心页按新设计稿重写"
 ### Task 9: 全量验证与人工核对
 
 **Files:**
+
 - 无新增文件；本轮仅验证与修复
 
 - [ ] **Step 1: 类型检查与规范检查**

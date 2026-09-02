@@ -6,7 +6,7 @@
 /** 会员卡统计项。 */
 export interface MemberStat {
   label: string;
-  count: number;
+  count: number | string;
 }
 
 /** 会员卡信息。 */

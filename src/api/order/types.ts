@@ -53,6 +53,11 @@ export interface OrderProduct {
   subtotal: number;
 }
 
+export interface OrderAppointmentSummary {
+  id: string;
+  status: number;
+}
+
 export interface OrderDetail {
   id: string;
   orderNo: string;
@@ -67,6 +72,8 @@ export interface OrderDetail {
   remark?: string | null;
   items: OrderProduct[];
   pricing: OrderQuote;
+  appointment: OrderAppointmentSummary | null;
+  canBookAppointment: boolean;
 }
 
 export interface OrderListItem {
@@ -79,6 +86,8 @@ export interface OrderListItem {
   payAmount: number;
   createTime: string;
   items: OrderProduct[];
+  appointment: OrderAppointmentSummary | null;
+  canBookAppointment: boolean;
 }
 
 export interface OrderQueryParams extends BaseQueryParams {

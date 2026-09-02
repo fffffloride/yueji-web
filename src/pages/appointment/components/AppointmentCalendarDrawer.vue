@@ -4,7 +4,7 @@
     position="right"
     root-portal
     :modal="false"
-    :z-index="1000"
+    :z-index="1200"
     :close-on-click-modal="false"
     custom-style="width: 100vw; height: 100vh; overflow: hidden; background: var(--yj-color-bg);"
   >
@@ -20,16 +20,8 @@
         <text v-for="weekday in WEEKDAYS" :key="weekday">{{ weekday }}</text>
       </view>
 
-      <scroll-view
-        class="appointment-calendar-drawer__content"
-        scroll-y
-        :show-scrollbar="false"
-      >
-        <view
-          v-for="month in calendarMonths"
-          :key="month.value"
-          class="appointment-calendar-month"
-        >
+      <scroll-view class="appointment-calendar-drawer__content" scroll-y :show-scrollbar="false">
+        <view v-for="month in calendarMonths" :key="month.value" class="appointment-calendar-month">
           <view class="appointment-calendar-month__title">{{ month.label }}</view>
           <view class="appointment-calendar-month__grid">
             <view

@@ -57,6 +57,7 @@
       <template v-else-if="order.status === OrderStatusEnum.PAID">
         <view class="order-card__button" @click.stop="emit('detail', order)">查看详情</view>
         <view
+          v-if="order.canBookAppointment"
           class="order-card__button order-card__button--primary"
           @click.stop="emit('appointment', order)"
         >

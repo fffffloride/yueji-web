@@ -11,11 +11,6 @@ import type {
 
 const ORDER_BASE_URL = "/app/order";
 
-interface ServerPageResult<T> {
-  data: T[];
-  page: { total: number };
-}
-
 const OrderAPI = {
   quote(data: OrderForm) {
     return request<OrderQuote, OrderForm>({
@@ -42,12 +37,11 @@ const OrderAPI = {
     });
   },
 
-  async getPage(params: OrderQueryParams): Promise<PageResult<OrderListItem>> {
-    const result = await request<ServerPageResult<OrderListItem>>({
+  getPage(params: OrderQueryParams) {
+    return request<PageResult<OrderListItem>>({
       url: `${ORDER_BASE_URL}/page`,
       params,
     });
-    return { list: result.data ?? [], total: result.page?.total ?? 0 };
   },
 
   getDetail(id: string) {

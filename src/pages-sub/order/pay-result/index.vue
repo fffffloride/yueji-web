@@ -102,12 +102,20 @@
         </wd-button>
       </view>
     </view>
+
+    <YjAppointmentDrawer
+      v-model:visible="appointmentDrawerVisible"
+      :order-id="resolvedOrderId"
+      @success="handleAppointmentSuccess"
+    />
   </YjPage>
 </template>
 
 <script setup lang="ts">
+import { AppointmentTab } from "@/api/appointment";
 import PayAPI, { PaymentStatusEnum, type PaymentInfo } from "@/api/pay";
 import { RoutePath } from "@/constants";
+import { isLoggedIn } from "@/utils/auth";
 import { formatDate, formatPrice } from "@/utils/format";
 import { navigate } from "@/utils/navigate";
 
@@ -120,6 +128,7 @@ const zeroAmountSuccess = ref(false);
 const loading = ref(false);
 const submitting = ref(false);
 const queryError = ref("");
+const appointmentDrawerVisible = ref(false);
 
 const isSuccessful = computed(
   () => zeroAmountSuccess.value || payment.value?.status === PaymentStatusEnum.SUCCESS
@@ -209,7 +218,33 @@ function viewGroup() {
 
 function goAppointment() {
   if (!resolvedOrderId.value) return;
-  navigate(RoutePath.APPOINTMENT, { params: { orderId: resolvedOrderId.value } });
+  if (!isLoggedIn()) {
+    navigate(RoutePath.ORDER_PAY_RESULT, {
+      requireAuth: true,
+      params: {
+        paymentNo: paymentNo.value,
+        orderId: orderId.value,
+        orderNo: orderNo.value,
+        groupId: groupId.value,
+        success: zeroAmountSuccess.value ? 1 : undefined,
+        openAppointment: 1,
+      },
+    });
+    return;
+  }
+  appointmentDrawerVisible.value = true;
+}
+
+async function handleAppointmentSuccess() {
+  const { confirm } = await uni.showModal({
+    title: "预约成功",
+    content: "已为你保留到店时间。",
+    cancelText: "留在当前页",
+    confirmText: "查看预约",
+  });
+  if (confirm) {
+    navigate(RoutePath.APPOINTMENT, { params: { tab: AppointmentTab.PENDING_ARRIVAL } });
+  }
 }
 
 function viewOrder() {
@@ -227,6 +262,7 @@ onLoad((options) => {
   orderNo.value = options?.orderNo ?? "";
   groupId.value = options?.groupId ?? "";
   zeroAmountSuccess.value = options?.success === "1";
+  appointmentDrawerVisible.value = options?.openAppointment === "1" && isLoggedIn();
   if (paymentNo.value) void queryPayment();
   else if (!zeroAmountSuccess.value) queryError.value = "支付参数不完整";
 });

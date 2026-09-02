@@ -41,14 +41,22 @@
         </template>
       </view>
     </view>
+
+    <YjAppointmentDrawer
+      v-model:visible="appointmentDrawerVisible"
+      :order-id="appointmentOrderId"
+      @success="handleAppointmentSuccess"
+    />
   </YjPage>
 </template>
 
 <script setup lang="ts">
+import { AppointmentTab } from "@/api/appointment";
 import OrderAPI, { type OrderListItem } from "@/api/order";
 import PayAPI from "@/api/pay";
 import { RoutePath } from "@/constants";
 import { ORDER_STATUS_TABS, OrderStatusEnum } from "@/enums/order";
+import { isLoggedIn } from "@/utils/auth";
 import { navigate } from "@/utils/navigate";
 
 const PAGE_SIZE = 10;
@@ -60,6 +68,8 @@ const finished = ref(false);
 const pageNum = ref(1);
 const loadError = ref("");
 const actionOrderId = ref("");
+const appointmentDrawerVisible = ref(false);
+const appointmentOrderId = ref("");
 
 let requestSequence = 0;
 let isFirstShow = true;
@@ -110,10 +120,29 @@ function viewOrder(order: OrderListItem): void {
 }
 
 function makeAppointment(order: OrderListItem): void {
-  navigate(RoutePath.APPOINTMENT, {
-    requireAuth: true,
-    params: { orderId: order.id },
+  if (!order.canBookAppointment) return;
+  if (!isLoggedIn()) {
+    navigate(RoutePath.ORDER_LIST, {
+      requireAuth: true,
+      params: { status: activeStatus.value, openAppointment: order.id },
+    });
+    return;
+  }
+  appointmentOrderId.value = order.id;
+  appointmentDrawerVisible.value = true;
+}
+
+async function handleAppointmentSuccess(): Promise<void> {
+  await fetchOrders(true);
+  const { confirm } = await uni.showModal({
+    title: "预约成功",
+    content: "已为你保留到店时间。",
+    cancelText: "留在订单",
+    confirmText: "查看预约",
   });
+  if (confirm) {
+    navigate(RoutePath.APPOINTMENT, { params: { tab: AppointmentTab.PENDING_ARRIVAL } });
+  }
 }
 
 async function cancelOrder(order: OrderListItem): Promise<void> {
@@ -160,6 +189,10 @@ onLoad((options) => {
     activeStatus.value = status as OrderStatusEnum;
   }
   void fetchOrders(true);
+  if (options?.openAppointment && isLoggedIn()) {
+    appointmentOrderId.value = String(options.openAppointment);
+    appointmentDrawerVisible.value = true;
+  }
 });
 
 onShow(() => {
