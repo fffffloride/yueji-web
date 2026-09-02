@@ -199,13 +199,13 @@ async function loadDecoration() {
   }
 }
 
-/** 快捷入口：前三项进我的预约（需登录），加入社群暂未开放。 */
+/** 快捷入口：前三项进入现有预约页，加入社群暂未开放。 */
 function handleQuickEntry(index: number) {
   if (index === 3) {
     handleComingSoon();
     return;
   }
-  navigate(RoutePath.MY_APPOINTMENT, { requireAuth: true });
+  navigate(RoutePath.APPOINTMENT, { requireAuth: true });
 }
 
 /** 新人券：未登录去登录，已登录去券包。 */

@@ -68,9 +68,9 @@ function handleConsult() {
   navigate(RoutePath.APPOINTMENT);
 }
 
-/** 统计项：仅「待预约」有跳转，其余照设计稿无动作。 */
+/** 统计项：仅「待预约」进入现有预约页，其余照设计稿无动作。 */
 function handleStatClick(index: number) {
-  if (index === 0) handleEntryClick(RoutePath.MY_APPOINTMENT);
+  if (index === 0) handleEntryClick(RoutePath.APPOINTMENT);
 }
 
 function handleQuickTool(index: number) {

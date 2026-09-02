@@ -1,7 +1,8 @@
-import { RoutePath, TAB_BAR_PATHS } from "@/constants";
+import { RoutePath, StorageKey, TAB_BAR_PATHS } from "@/constants";
 import { useUserStore } from "@/stores/user";
 import { isLoggedIn } from "./auth";
 import { buildQuery } from "./format";
+import { getStorage, removeStorage, setStorage } from "./storage";
 
 export interface NavigateOptions {
   /** 查询参数，自动拼接到路径上。 */
@@ -18,6 +19,30 @@ function isTabBarPath(path: string): boolean {
   return TAB_BAR_PATHS.includes(path);
 }
 
+interface TabBarParams {
+  path: string;
+  params: Record<string, string>;
+}
+
+function splitUrl(url: string): { path: string; params: Record<string, string> } {
+  const [path, query = ""] = url.split("?", 2);
+  const params: Record<string, string> = {};
+  for (const pair of query.split("&")) {
+    if (!pair) continue;
+    const [key, value = ""] = pair.split("=", 2);
+    params[decodeURIComponent(key)] = decodeURIComponent(value);
+  }
+  return { path, params };
+}
+
+/** 读取并清除指定 TabBar 页的一次性跳转参数。 */
+export function consumeTabBarParams(path: string): Record<string, string> | undefined {
+  const pending = getStorage<TabBarParams>(StorageKey.TAB_BAR_PARAMS);
+  if (!pending || pending.path !== path) return undefined;
+  removeStorage(StorageKey.TAB_BAR_PARAMS);
+  return pending.params;
+}
+
 /** 跳转登录页，登录成功后可回到 from 指定的页面。 */
 export function toLogin(from?: string): void {
   uni.navigateTo({ url: `${RoutePath.LOGIN}${buildQuery({ from })}` });
@@ -31,9 +56,17 @@ export function toLogin(from?: string): void {
  */
 export function navigate(path: string, options: NavigateOptions = {}): void {
   const { params, requireAuth = false, requireAgent = false, redirect = false } = options;
+  const parsed = splitUrl(path);
+  const routePath = parsed.path;
+  const routeParams = Object.fromEntries(
+    Object.entries({ ...parsed.params, ...params }).map(([key, value]) => [
+      key,
+      String(value ?? ""),
+    ])
+  );
 
   if ((requireAuth || requireAgent) && !isLoggedIn()) {
-    toLogin(`${path}${buildQuery(params)}`);
+    toLogin(`${routePath}${buildQuery(routeParams)}`);
     return;
   }
 
@@ -42,12 +75,17 @@ export function navigate(path: string, options: NavigateOptions = {}): void {
     return;
   }
 
-  if (isTabBarPath(path)) {
-    uni.switchTab({ url: path });
+  if (isTabBarPath(routePath)) {
+    setStorage<TabBarParams>(
+      StorageKey.TAB_BAR_PARAMS,
+      { path: routePath, params: routeParams },
+      10 * 60 * 1000
+    );
+    uni.switchTab({ url: routePath });
     return;
   }
 
-  const url = `${path}${buildQuery(params)}`;
+  const url = `${routePath}${buildQuery(routeParams)}`;
   if (redirect) {
     uni.redirectTo({ url });
   } else {

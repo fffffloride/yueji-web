@@ -10,6 +10,8 @@ export const StorageKey = {
   VISITOR_ID: `${APP_PREFIX}:analytics:visitor_id`,
   /** 首页活动弹窗当日已关闭标记 */
   HOME_POPUP_CLOSED_AT: `${APP_PREFIX}:home:popup_closed_at`,
+  /** TabBar 页面跳转时的一次性参数 */
+  TAB_BAR_PARAMS: `${APP_PREFIX}:navigation:tab_bar_params`,
 } as const;
 
 export const STORAGE_PREFIX = APP_PREFIX;

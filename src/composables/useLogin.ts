@@ -1,7 +1,7 @@
 import { RoutePath } from "@/constants";
 import { useUserStore } from "@/stores/user";
 import { isLoggedIn } from "@/utils/auth";
-import { toLogin } from "@/utils/navigate";
+import { navigate, toLogin } from "@/utils/navigate";
 
 /** 登录相关的通用流程，供登录页与需要登录态的业务页复用。 */
 export function useLogin() {
@@ -21,7 +21,7 @@ export function useLogin() {
     try {
       await userStore.login(inviterId);
       if (from) {
-        uni.redirectTo({ url: from, fail: () => uni.switchTab({ url: RoutePath.HOME }) });
+        navigate(from, { redirect: true });
       } else {
         uni.switchTab({ url: RoutePath.HOME });
       }

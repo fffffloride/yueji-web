@@ -24,15 +24,28 @@
         </view>
       </scroll-view>
 
-      <view
-        class="appointment-calendar"
-        @click="openCalendarDrawer"
-      >
+      <view class="appointment-calendar" @click="openCalendarDrawer">
         <view class="appointment-calendar__content">
           <wd-icon name="calendar" size="42rpx" />
           <text>日历</text>
         </view>
       </view>
+    </view>
+
+    <view v-if="orderId" class="appointment-order">
+      <view class="appointment-order__title">
+        <text>订单预约</text>
+        <text v-if="orderDetail">{{ orderDetail.orderNo }}</text>
+      </view>
+      <view v-if="orderLoading" class="appointment-order__state">
+        <wd-loading size="36rpx" />
+        <text>正在读取订单信息</text>
+      </view>
+      <template v-else-if="orderDetail">
+        <view class="appointment-order__products">{{ orderProductNames }}</view>
+        <view v-if="orderError" class="appointment-order__error">{{ orderError }}</view>
+      </template>
+      <view v-else class="appointment-order__error">{{ orderError || "订单信息不可用" }}</view>
     </view>
 
     <view class="appointment-time-section">
@@ -41,16 +54,28 @@
         <text>{{ selectedDateText }}</text>
       </view>
 
-      <view class="appointment-time-grid">
+      <view v-if="slotsLoading && slots.length === 0" class="appointment-slots-state">
+        <wd-loading size="40rpx" />
+        <text>正在查询可预约时间</text>
+      </view>
+      <view v-else-if="slotsError && slots.length === 0" class="appointment-slots-state">
+        <text>{{ slotsError }}</text>
+        <text class="appointment-slots-state__retry" @click="loadSlots">重新加载</text>
+      </view>
+      <view v-else class="appointment-time-grid">
         <button
-          v-for="time in timeOptions"
-          :key="time"
+          v-for="slot in slots"
+          :key="slot.time"
           class="appointment-time"
-          :class="{ 'appointment-time--active': selectedTime === time }"
-          :disabled="submitting"
-          @click="selectedTime = time"
+          :class="{
+            'appointment-time--active': selectedTime === slot.time,
+            'appointment-time--full': slot.full,
+          }"
+          :disabled="submitting || slotsLoading || !slot.available || !orderCanSubmit"
+          @click="selectTime(slot)"
         >
-          {{ time }}
+          <text>{{ slot.time }}</text>
+          <text v-if="slot.full" class="appointment-time__status">已约满</text>
         </button>
       </view>
 
@@ -69,7 +94,7 @@
         type="primary"
         size="large"
         :loading="submitting"
-        :disabled="!selectedTime || submitting"
+        :disabled="!selectedTime || submitting || slotsLoading || !orderCanSubmit"
         @click="submitAppointment"
       >
         确认预约
@@ -90,10 +115,14 @@
 
 <script setup lang="ts">
 import { onBackPress } from "@dcloudio/uni-app";
-import AppointmentAPI from "@/api/appointment";
+import AppointmentAPI, {
+  type AppointmentOrderEligibility,
+  type AppointmentSlot,
+} from "@/api/appointment";
+import OrderAPI, { type OrderDetail } from "@/api/order";
 import { RoutePath } from "@/constants";
 import { isLoggedIn } from "@/utils/auth";
-import { toLogin } from "@/utils/navigate";
+import { consumeTabBarParams, toLogin } from "@/utils/navigate";
 import AppointmentCalendarDrawer from "./components/AppointmentCalendarDrawer.vue";
 
 interface DateOption {
@@ -103,18 +132,6 @@ interface DateOption {
 }
 
 const WEEK_LABELS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
-const TIME_OPTIONS = [
-  "10:00",
-  "11:00",
-  "12:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-  "17:00",
-  "18:00",
-  "19:00",
-];
 const today = startOfDay(new Date());
 const tomorrow = addDays(today, 1);
 const maxBookableDate = addMonthsClamped(today, 2);
@@ -122,20 +139,33 @@ const minDate = formatDateValue(tomorrow);
 const maxDate = formatDateValue(maxBookableDate);
 const selectedDate = ref(minDate);
 const selectedTime = ref("");
+const slots = ref<AppointmentSlot[]>([]);
+const slotsLoading = ref(false);
+const slotsError = ref("");
 const submitting = ref(false);
+const orderId = ref("");
+const orderDetail = ref<OrderDetail>();
+const orderEligibility = ref<AppointmentOrderEligibility>();
+const orderLoading = ref(false);
+const orderError = ref("");
 const calendarDrawerVisible = ref(false);
 const dateScrollIntoView = ref(dateDomId(minDate));
 const dateDragging = ref(false);
 let dateDragStartX = 0;
 let dateDragStartScrollLeft = 0;
 let h5DateScrollElement: HTMLElement | null = null;
-const timeOptions = TIME_OPTIONS;
 const dateOptions = buildDateOptions(tomorrow, maxBookableDate);
+let slotsRequestSequence = 0;
+let orderRequestSequence = 0;
 
 const selectedDateText = computed(() => {
   const current = dateOptions.find((date) => date.value === selectedDate.value);
   return current ? `${current.caption} ${current.label}` : selectedDate.value;
 });
+const orderProductNames = computed(() =>
+  orderDetail.value?.items.map((item) => item.productName).join("、")
+);
+const orderCanSubmit = computed(() => !orderId.value || orderEligibility.value?.eligible === true);
 
 function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -196,7 +226,7 @@ function moveDateDrag(event: PointerEvent): void {
   if (!dateDragging.value || !h5DateScrollElement) return;
   h5DateScrollElement.scrollLeft = Math.max(
     0,
-    dateDragStartScrollLeft - (event.clientX - dateDragStartX),
+    dateDragStartScrollLeft - (event.clientX - dateDragStartX)
   );
 }
 
@@ -208,11 +238,10 @@ function endDateDrag(event: PointerEvent): void {
 
 function bindH5DateDrag(): void {
   const elements = document.querySelectorAll<HTMLElement>(
-    ".appointment-date-bar__scroll .uni-scroll-view",
+    ".appointment-date-bar__scroll .uni-scroll-view"
   );
-  h5DateScrollElement = Array.from(elements).find(
-    (element) => element.scrollWidth > element.clientWidth,
-  ) ?? null;
+  h5DateScrollElement =
+    Array.from(elements).find((element) => element.scrollWidth > element.clientWidth) ?? null;
   h5DateScrollElement?.addEventListener("pointerdown", startDateDrag);
   h5DateScrollElement?.addEventListener("pointermove", moveDateDrag);
   h5DateScrollElement?.addEventListener("pointerup", endDateDrag);
@@ -232,6 +261,64 @@ function selectDate(value: string): void {
   selectedDate.value = value;
   selectedTime.value = "";
   dateScrollIntoView.value = dateDomId(value);
+  void loadSlots();
+}
+
+function selectTime(slot: AppointmentSlot): void {
+  if (!slot.available || !orderCanSubmit.value) return;
+  selectedTime.value = slot.time;
+}
+
+async function loadSlots(): Promise<void> {
+  const sequence = ++slotsRequestSequence;
+  slotsLoading.value = true;
+  slotsError.value = "";
+  try {
+    const result = await AppointmentAPI.getSlots(selectedDate.value);
+    if (sequence !== slotsRequestSequence) return;
+    slots.value = result;
+    if (!result.some((slot) => slot.time === selectedTime.value && slot.available)) {
+      selectedTime.value = "";
+    }
+  } catch (error) {
+    if (sequence !== slotsRequestSequence) return;
+    slotsError.value = error instanceof Error ? error.message : "可预约时间加载失败";
+  } finally {
+    if (sequence === slotsRequestSequence) slotsLoading.value = false;
+  }
+}
+
+async function loadOrderContext(nextOrderId: string): Promise<void> {
+  const sequence = ++orderRequestSequence;
+  orderId.value = nextOrderId;
+  orderDetail.value = undefined;
+  orderEligibility.value = undefined;
+  orderLoading.value = false;
+  orderError.value = "";
+  selectedTime.value = "";
+  if (!nextOrderId) return;
+
+  if (!isLoggedIn()) {
+    toLogin(`${RoutePath.APPOINTMENT}?orderId=${encodeURIComponent(nextOrderId)}`);
+    return;
+  }
+
+  orderLoading.value = true;
+  try {
+    const [detail, eligibility] = await Promise.all([
+      OrderAPI.getDetail(nextOrderId),
+      AppointmentAPI.getOrderEligibility(nextOrderId),
+    ]);
+    if (sequence !== orderRequestSequence) return;
+    orderDetail.value = detail;
+    orderEligibility.value = eligibility;
+    orderError.value = eligibility.eligible ? "" : eligibility.reason;
+  } catch (error) {
+    if (sequence !== orderRequestSequence) return;
+    orderError.value = error instanceof Error ? error.message : "订单不可预约";
+  } finally {
+    if (sequence === orderRequestSequence) orderLoading.value = false;
+  }
 }
 
 function openCalendarDrawer(): void {
@@ -239,9 +326,10 @@ function openCalendarDrawer(): void {
 }
 
 async function submitAppointment(): Promise<void> {
-  if (!selectedTime.value || submitting.value) return;
+  if (!selectedTime.value || submitting.value || !orderCanSubmit.value) return;
   if (!isLoggedIn()) {
-    toLogin(RoutePath.APPOINTMENT);
+    const query = orderId.value ? `?orderId=${encodeURIComponent(orderId.value)}` : "";
+    toLogin(`${RoutePath.APPOINTMENT}${query}`);
     return;
   }
 
@@ -250,6 +338,7 @@ async function submitAppointment(): Promise<void> {
     await AppointmentAPI.create({
       appointmentDate: selectedDate.value,
       appointmentTime: selectedTime.value,
+      orderId: orderId.value || undefined,
     });
     const confirmedTime = selectedTime.value;
     selectedTime.value = "";
@@ -259,6 +348,8 @@ async function submitAppointment(): Promise<void> {
       showCancel: false,
       confirmText: "知道了",
     });
+    await loadSlots();
+    if (orderId.value) await loadOrderContext(orderId.value);
   } finally {
     submitting.value = false;
   }
@@ -268,6 +359,17 @@ onBackPress(() => {
   if (!calendarDrawerVisible.value) return false;
   calendarDrawerVisible.value = false;
   return true;
+});
+
+onLoad((options) => {
+  void loadSlots();
+  const directOrderId = String(options?.orderId ?? "");
+  if (directOrderId) void loadOrderContext(directOrderId);
+});
+
+onShow(() => {
+  const params = consumeTabBarParams(RoutePath.APPOINTMENT);
+  if (params !== undefined) void loadOrderContext(params.orderId ?? "");
 });
 
 // #ifdef H5
@@ -386,21 +488,69 @@ onBeforeUnmount(unbindH5DateDrag);
   }
 }
 
+.appointment-order {
+  padding: $spacing-md $page-padding;
+  background: $color-surface-warm;
+  border-bottom: 1rpx solid $color-line;
+
+  &__title {
+    display: flex;
+    justify-content: space-between;
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $color-text-title;
+  }
+
+  &__products,
+  &__state,
+  &__error {
+    margin-top: $spacing-xs;
+    font-size: $font-size-sm;
+    line-height: 1.6;
+    color: $color-text-sub;
+  }
+
+  &__state {
+    display: flex;
+    gap: $spacing-xs;
+    align-items: center;
+  }
+
+  &__error {
+    color: $color-danger;
+  }
+}
+
 .appointment-time-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18rpx 20rpx;
 }
 
+.appointment-slots-state {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+  justify-content: center;
+  min-height: 190rpx;
+  font-size: $font-size-sm;
+  color: $color-text-placeholder;
+
+  &__retry {
+    color: $color-primary;
+  }
+}
+
 .appointment-time {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 86rpx;
   padding: 0;
   margin: 0;
   font-size: $font-size-md;
-  line-height: 86rpx;
+  line-height: 1.2;
   color: $color-text-content;
   background: $color-bg-page;
   border: 2rpx solid transparent;
@@ -415,6 +565,12 @@ onBeforeUnmount(unbindH5DateDrag);
     color: $color-bg;
     background: $color-primary;
     border-color: $color-primary;
+  }
+
+  &__status {
+    margin-top: 6rpx;
+    font-size: 20rpx;
+    line-height: 1;
   }
 
   &[disabled] {

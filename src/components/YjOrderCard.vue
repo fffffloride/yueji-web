@@ -54,9 +54,16 @@
           继续支付
         </view>
       </template>
-      <view v-else class="order-card__button" @click.stop="emit('detail', order)">
-        查看详情
-      </view>
+      <template v-else-if="order.status === OrderStatusEnum.PAID">
+        <view class="order-card__button" @click.stop="emit('detail', order)">查看详情</view>
+        <view
+          class="order-card__button order-card__button--primary"
+          @click.stop="emit('appointment', order)"
+        >
+          预约到店
+        </view>
+      </template>
+      <view v-else class="order-card__button" @click.stop="emit('detail', order)">查看详情</view>
     </view>
   </view>
 </template>
@@ -75,6 +82,7 @@ const emit = defineEmits<{
   (e: "cancel", order: OrderListItem): void;
   (e: "detail", order: OrderListItem): void;
   (e: "pay", order: OrderListItem): void;
+  (e: "appointment", order: OrderListItem): void;
 }>();
 
 const failedImageIds = ref<string[]>([]);

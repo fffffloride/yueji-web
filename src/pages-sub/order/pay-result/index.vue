@@ -55,7 +55,12 @@
           刷新支付结果
         </wd-button>
 
-        <wd-button v-if="isSuccessful && !groupId" type="primary" block @click="goAppointment">
+        <wd-button
+          v-if="isSuccessful && !groupId && resolvedOrderId"
+          type="primary"
+          block
+          @click="goAppointment"
+        >
           去预约
         </wd-button>
         <wd-button v-if="isSuccessful && groupId" type="primary" block @click="viewGroup">
@@ -203,7 +208,8 @@ function viewGroup() {
 }
 
 function goAppointment() {
-  navigate(RoutePath.APPOINTMENT);
+  if (!resolvedOrderId.value) return;
+  navigate(RoutePath.APPOINTMENT, { params: { orderId: resolvedOrderId.value } });
 }
 
 function viewOrder() {

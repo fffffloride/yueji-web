@@ -31,6 +31,7 @@
             :order="order"
             :action-loading="actionOrderId === order.id"
             @cancel="cancelOrder"
+            @appointment="makeAppointment"
             @detail="viewOrder"
             @pay="continuePayment"
           />
@@ -108,6 +109,13 @@ function viewOrder(order: OrderListItem): void {
   });
 }
 
+function makeAppointment(order: OrderListItem): void {
+  navigate(RoutePath.APPOINTMENT, {
+    requireAuth: true,
+    params: { orderId: order.id },
+  });
+}
+
 async function cancelOrder(order: OrderListItem): Promise<void> {
   if (actionOrderId.value) return;
   const { confirm } = await uni.showModal({
@@ -132,14 +140,14 @@ async function continuePayment(order: OrderListItem): Promise<void> {
   try {
     if (order.payAmount === 0) {
       navigate(RoutePath.ORDER_PAY_RESULT, {
-        params: { orderNo: order.orderNo, success: 1 },
+        params: { orderId: order.id, orderNo: order.orderNo, success: 1 },
       });
       return;
     }
 
     const payment = await PayAPI.create(order.id);
     navigate(RoutePath.ORDER_PAY_RESULT, {
-      params: { paymentNo: payment.paymentNo, orderNo: order.orderNo },
+      params: { orderId: order.id, paymentNo: payment.paymentNo, orderNo: order.orderNo },
     });
   } finally {
     actionOrderId.value = "";
@@ -148,10 +156,7 @@ async function continuePayment(order: OrderListItem): Promise<void> {
 
 onLoad((options) => {
   const status = Number(options?.status);
-  if (
-    options?.status !== undefined &&
-    ORDER_STATUS_TABS.some((tab) => tab.value === status)
-  ) {
+  if (options?.status !== undefined && ORDER_STATUS_TABS.some((tab) => tab.value === status)) {
     activeStatus.value = status as OrderStatusEnum;
   }
   void fetchOrders(true);
