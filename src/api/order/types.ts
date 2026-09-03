@@ -83,6 +83,7 @@ export interface OrderDetail {
   giftId: string | null;
   canGift: boolean;
   canReturnGift: boolean;
+  canProxyPay: boolean;
 }
 
 export interface OrderListItem {
@@ -101,6 +102,7 @@ export interface OrderListItem {
   giftId: string | null;
   canGift: boolean;
   canReturnGift: boolean;
+  canProxyPay: boolean;
 }
 
 export interface OrderQueryParams extends BaseQueryParams {

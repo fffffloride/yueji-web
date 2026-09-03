@@ -40,6 +40,7 @@
             @detail="viewOrder"
             @gift="openGift"
             @pay="continuePayment"
+            @proxy-pay="openProxyPay"
           />
 
           <view v-if="loading" class="order-list__more">加载中...</view>
@@ -64,6 +65,7 @@ import { RoutePath } from "@/constants";
 import { ORDER_STATUS_TABS, OrderStatusEnum } from "@/enums/order";
 import { isLoggedIn } from "@/utils/auth";
 import { navigate } from "@/utils/navigate";
+import { invokeWechatPayment } from "@/utils/payment";
 
 const PAGE_SIZE = 10;
 
@@ -153,6 +155,14 @@ function openGiftRecords(): void {
   navigate(RoutePath.ORDER_GIFT, { requireAuth: true });
 }
 
+function openProxyPay(order: OrderListItem): void {
+  if (!order.canProxyPay) return;
+  navigate(RoutePath.ORDER_PROXY_PAY, {
+    requireAuth: true,
+    params: { orderId: order.id },
+  });
+}
+
 async function handleAppointmentSuccess(): Promise<void> {
   await fetchOrders(true);
   const { confirm } = await uni.showModal({
@@ -196,6 +206,7 @@ async function continuePayment(order: OrderListItem): Promise<void> {
     }
 
     const payment = await PayAPI.create(order.id);
+    await invokeWechatPayment(payment);
     navigate(RoutePath.ORDER_PAY_RESULT, {
       params: { orderId: order.id, paymentNo: payment.paymentNo, orderNo: order.orderNo },
     });

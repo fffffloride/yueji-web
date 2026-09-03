@@ -97,7 +97,11 @@
         },
         {
           "path": "proxy-pay/index",
-          "style": { "navigationBarTitleText": "好友代付" }
+          "style": {
+            "navigationBarTitleText": "好友代付",
+            "enablePullDownRefresh": true,
+            "enableShareAppMessage": true
+          }
         }
       ]
     },

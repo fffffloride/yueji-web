@@ -177,6 +177,7 @@ import { isLoggedIn } from "@/utils/auth";
 import { buildQuery, formatPrice } from "@/utils/format";
 import { formatCountdown, remainingPeople, remainingSeconds } from "@/utils/group-buy";
 import { navigate } from "@/utils/navigate";
+import { invokeWechatPayment } from "@/utils/payment";
 
 const flowSteps = [
   { title: "支付开团", text: "完成付款" },
@@ -344,6 +345,7 @@ async function refreshGroup() {
 async function goToPayment(result: Pick<GroupBuyOrderResult, "groupId" | "orderId" | "orderNo">) {
   try {
     const payment = await PayAPI.create(result.orderId);
+    await invokeWechatPayment(payment);
     navigate(RoutePath.ORDER_PAY_RESULT, {
       redirect: true,
       params: {

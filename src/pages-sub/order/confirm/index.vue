@@ -224,6 +224,7 @@ import {
 } from "@/utils/checkout";
 import { formatDate, formatPrice } from "@/utils/format";
 import { navigate } from "@/utils/navigate";
+import { invokeWechatPayment } from "@/utils/payment";
 
 interface DisplayItem {
   skuId: string;
@@ -399,6 +400,7 @@ async function continuePayment(order: OrderDetail) {
     return;
   }
   const payment = await PayAPI.create(order.id);
+  await invokeWechatPayment(payment);
   navigate(RoutePath.ORDER_PAY_RESULT, {
     redirect: true,
     params: { orderId: order.id, paymentNo: payment.paymentNo, orderNo: order.orderNo },

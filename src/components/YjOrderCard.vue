@@ -50,6 +50,14 @@
           取消订单
         </view>
         <view
+          v-if="order.canProxyPay"
+          class="order-card__button"
+          :class="{ 'is-disabled': actionLoading }"
+          @click.stop="emit('proxyPay', order)"
+        >
+          好友代付
+        </view>
+        <view
           class="order-card__button order-card__button--primary"
           :class="{ 'is-disabled': actionLoading }"
           @click.stop="emit('pay', order)"
@@ -91,6 +99,7 @@ const emit = defineEmits<{
   (e: "pay", order: OrderListItem): void;
   (e: "appointment", order: OrderListItem): void;
   (e: "gift", order: OrderListItem): void;
+  (e: "proxyPay", order: OrderListItem): void;
 }>();
 
 const failedImageIds = ref<string[]>([]);
