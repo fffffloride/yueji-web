@@ -26,6 +26,8 @@ assert.match(page, /onHide\([\s\S]*stopPolling/);
 assert.match(page, /onUnload\([\s\S]*stopPolling/);
 assert.match(page, /onShareAppMessage/);
 assert.match(page, /createCanvasContext/);
+assert.match(page, /options\?\.scene/);
+assert.match(page, /ProxyPayStatus\.REFUNDED/);
 assert.match(payment, /uni\.requestPayment/);
 for (const source of [confirm, orderList, groupBuy]) {
   assert.match(source, /invokeWechatPayment\(payment\)/);

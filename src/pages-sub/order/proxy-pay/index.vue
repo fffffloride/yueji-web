@@ -145,6 +145,7 @@ import { invokeWechatPayment } from "@/utils/payment";
 const CANVAS_ID = "proxyPayPoster";
 const TERMINAL_STATUSES = new Set<ProxyPayStatus>([
   ProxyPayStatus.PAID,
+  ProxyPayStatus.REFUNDED,
   ProxyPayStatus.CANCELLED,
   ProxyPayStatus.EXPIRED,
 ]);
@@ -178,6 +179,7 @@ const expiryCountdown = computed(() =>
 const statusTone = computed(() => {
   if (preview.value?.status === ProxyPayStatus.PAID) return "success";
   if (
+    preview.value?.status === ProxyPayStatus.REFUNDED ||
     preview.value?.status === ProxyPayStatus.CANCELLED ||
     preview.value?.status === ProxyPayStatus.EXPIRED
   )
@@ -193,6 +195,7 @@ const statusIcon = computed(() => {
 const heroTitle = computed(() => {
   if (preview.value?.status === ProxyPayStatus.PAID)
     return ownerMode.value ? "好友已完成代付" : "已帮好友完成付款";
+  if (preview.value?.status === ProxyPayStatus.REFUNDED) return "订单已退款";
   if (preview.value?.status === ProxyPayStatus.CANCELLED) return "订单已取消";
   if (preview.value?.status === ProxyPayStatus.EXPIRED) return "代付邀请已过期";
   if (preview.value?.status === ProxyPayStatus.PAYING) return "正在等待付款";
@@ -430,7 +433,11 @@ onShareAppMessage(() => ({
 
 onLoad((options) => {
   orderId.value = options?.orderId ? String(options.orderId) : "";
-  token.value = options?.token ? String(options.token) : "";
+  token.value = options?.token
+    ? String(options.token)
+    : options?.scene
+      ? String(options.scene)
+      : "";
   clockTimer = setInterval(() => {
     now.value = Date.now();
   }, 1000);

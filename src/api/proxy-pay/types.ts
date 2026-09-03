@@ -4,6 +4,7 @@ export const ProxyPayStatus = {
   WAITING: "WAITING",
   PAYING: "PAYING",
   PAID: "PAID",
+  REFUNDED: "REFUNDED",
   CANCELLED: "CANCELLED",
   EXPIRED: "EXPIRED",
 } as const;
