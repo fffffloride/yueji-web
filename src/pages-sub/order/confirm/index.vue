@@ -136,7 +136,7 @@
         <view class="confirm-agreement__copy">
           <text>我已阅读并同意</text>
           <text class="confirm-agreement__link" @click.stop="openAgreement">
-            《{{ agreement?.title || "用户就诊告知及知情同意书" }}》
+            《{{ agreement?.title || AGREEMENT_TITLE[AgreementType.MEDICAL_INFORMED_CONSENT] }}》
           </text>
           <text v-if="agreementError" class="confirm-agreement__error">
             {{ agreementError }}
@@ -248,7 +248,11 @@
 
 <script setup lang="ts">
 import { useMessage } from "wot-design-uni";
-import AgreementAPI, { AgreementType, type PublishedAgreement } from "@/api/agreement";
+import AgreementAPI, {
+  AGREEMENT_TITLE,
+  AgreementType,
+  type PublishedAgreement,
+} from "@/api/agreement";
 import OrderAPI, {
   type AvailableCoupon,
   type OrderDetail,

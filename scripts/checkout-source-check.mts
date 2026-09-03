@@ -22,6 +22,7 @@ assert.match(confirmPage, /async function ensureOrderCreated/);
 assert.match(confirmPage, /if \(mode === "proxy"\)[\s\S]{0,180}RoutePath\.ORDER_PROXY_PAY/);
 assert.match(confirmPage, /await continuePayment\(order\)/);
 assert.match(agreementTypes, /MEDICAL_INFORMED_CONSENT/);
+assert.match(agreementTypes, /用户就诊告知及知情同意书/);
 assert.match(agreementPage, /Object\.values\(AgreementType\)\.includes\(requestedType\)/);
 assert.match(confirmPage, /我已阅读并同意/);
 assert.match(confirmPage, /购买商品，请先阅读并同意/);

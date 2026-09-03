@@ -20,7 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import AgreementAPI, { AgreementType, type PublishedAgreement } from "@/api/agreement";
+import AgreementAPI, {
+  AGREEMENT_TITLE,
+  AgreementType,
+  type PublishedAgreement,
+} from "@/api/agreement";
 import { formatDate } from "@/utils/format";
 
 const type = ref(AgreementType.USER_AGREEMENT);
@@ -48,6 +52,7 @@ onLoad((options) => {
   type.value = Object.values(AgreementType).includes(requestedType)
     ? requestedType
     : AgreementType.USER_AGREEMENT;
+  uni.setNavigationBarTitle({ title: AGREEMENT_TITLE[type.value] });
   void load();
 });
 </script>
