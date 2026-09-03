@@ -192,14 +192,26 @@
           <text>应付</text>
           <text>{{ formatPrice(quote.payAmount, true) }}</text>
         </view>
-        <wd-button
-          type="primary"
-          :loading="submitting"
-          :disabled="submitting || benefitsLoading"
-          @click="submit"
-        >
-          {{ createdOrder ? "继续支付" : quote.payAmount === 0 ? "确认订单" : "提交订单" }}
-        </wd-button>
+        <view class="confirm-footer__actions">
+          <wd-button
+            v-if="quote.payAmount > 0"
+            plain
+            type="primary"
+            :loading="submittingMode === 'proxy'"
+            :disabled="Boolean(submittingMode) || benefitsLoading"
+            @click="submit('proxy')"
+          >
+            好友代付
+          </wd-button>
+          <wd-button
+            type="primary"
+            :loading="submittingMode === 'self'"
+            :disabled="Boolean(submittingMode) || benefitsLoading"
+            @click="submit('self')"
+          >
+            {{ createdOrder ? "继续支付" : quote.payAmount === 0 ? "确认订单" : "立即支付" }}
+          </wd-button>
+        </view>
       </view>
     </template>
   </YjPage>
@@ -249,7 +261,7 @@ const contactName = ref("");
 const contactMobile = ref("");
 const remark = ref("");
 const loading = ref(false);
-const submitting = ref(false);
+const submittingMode = ref<"self" | "proxy" | "">("");
 const benefitsLoading = ref(false);
 const loadError = ref("");
 const routeOptions = ref<Record<string, string>>({});
@@ -407,32 +419,44 @@ async function continuePayment(order: OrderDetail) {
   });
 }
 
-async function submit() {
+async function ensureOrderCreated(): Promise<OrderDetail> {
+  if (createdOrder.value) return createdOrder.value;
+  if (!source.value || !quote.value) throw new Error("订单参数不完整");
+
+  const form: OrderForm = {
+    ...source.value,
+    memberCouponId: quote.value.memberCouponId || undefined,
+    pointsToUse: quote.value.pointsUsed,
+    contactName: contactName.value.trim(),
+    contactMobile: contactMobile.value.trim(),
+    remark: remark.value.trim() || undefined,
+  };
+  createdOrder.value = await OrderAPI.create(form);
+  if ("cartIds" in source.value) await cartStore.fetch();
+  return createdOrder.value;
+}
+
+async function submit(mode: "self" | "proxy") {
   if (
-    submitting.value ||
+    submittingMode.value ||
     benefitsLoading.value ||
     !source.value ||
     !quote.value ||
     !validateContact()
   )
     return;
-  submitting.value = true;
+  submittingMode.value = mode;
   try {
-    if (!createdOrder.value) {
-      const form: OrderForm = {
-        ...source.value,
-        memberCouponId: quote.value.memberCouponId || undefined,
-        pointsToUse: quote.value.pointsUsed,
-        contactName: contactName.value.trim(),
-        contactMobile: contactMobile.value.trim(),
-        remark: remark.value.trim() || undefined,
-      };
-      createdOrder.value = await OrderAPI.create(form);
-      if ("cartIds" in source.value) await cartStore.fetch();
+    const order = await ensureOrderCreated();
+    if (mode === "proxy") {
+      navigate(RoutePath.ORDER_PROXY_PAY, {
+        params: { orderId: order.id },
+      });
+      return;
     }
-    await continuePayment(createdOrder.value);
+    await continuePayment(order);
   } finally {
-    submitting.value = false;
+    submittingMode.value = "";
   }
 }
 
@@ -755,6 +779,12 @@ onLoad((options) => {
       font-weight: 700;
       color: $color-price;
     }
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-sm;
+    align-items: center;
   }
 }
 </style>
