@@ -44,10 +44,10 @@ async function load() {
 }
 
 onLoad((options) => {
-  type.value =
-    options?.type === AgreementType.PRIVACY_POLICY
-      ? AgreementType.PRIVACY_POLICY
-      : AgreementType.USER_AGREEMENT;
+  const requestedType = options?.type as AgreementType;
+  type.value = Object.values(AgreementType).includes(requestedType)
+    ? requestedType
+    : AgreementType.USER_AGREEMENT;
   void load();
 });
 </script>

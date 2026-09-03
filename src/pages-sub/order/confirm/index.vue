@@ -19,7 +19,12 @@
       <view class="confirm-section">
         <view class="confirm-section__title">项目清单</view>
         <view v-for="item in displayItems" :key="item.skuId" class="confirm-item">
-          <image v-if="item.image" class="confirm-item__image" :src="item.image" mode="aspectFill" />
+          <image
+            v-if="item.image"
+            class="confirm-item__image"
+            :src="item.image"
+            mode="aspectFill"
+          />
           <view v-else class="confirm-item__image confirm-item__placeholder">悦己</view>
           <view class="confirm-item__content">
             <view class="confirm-item__name">{{ item.name }}</view>
@@ -74,7 +79,10 @@
           <view>
             <view class="confirm-benefits__label">优惠券</view>
             <view class="confirm-benefits__hint">
-              {{ selectedCoupon?.couponName || (coupons.length ? `${coupons.length} 张可用` : "暂无可用") }}
+              {{
+                selectedCoupon?.couponName ||
+                (coupons.length ? `${coupons.length} 张可用` : "暂无可用")
+              }}
             </view>
           </view>
           <view class="confirm-benefits__action">
@@ -122,6 +130,19 @@
           <text>{{ formatPrice(quote.payAmount, true) }}</text>
         </view>
       </view>
+
+      <view class="confirm-agreement">
+        <wd-checkbox v-model="agreementAccepted" :disabled="agreementLoading || !agreement" />
+        <view class="confirm-agreement__copy">
+          <text>我已阅读并同意</text>
+          <text class="confirm-agreement__link" @click.stop="openAgreement">
+            《{{ agreement?.title || "用户就诊告知及知情同意书" }}》
+          </text>
+          <text v-if="agreementError" class="confirm-agreement__error">
+            {{ agreementError }}
+          </text>
+        </view>
+      </view>
     </template>
 
     <wd-popup
@@ -160,11 +181,17 @@
             <view class="coupon-card__amount">
               <view class="coupon-card__amount-main">
                 <text class="coupon-card__amount-symbol">¥</text>
-                <text class="coupon-card__amount-value">{{ formatCouponAmount(coupon.couponAmount) }}</text>
+                <text class="coupon-card__amount-value">{{
+                  formatCouponAmount(coupon.couponAmount)
+                }}</text>
                 <text class="coupon-card__amount-unit">元</text>
               </view>
               <text class="coupon-card__amount-label">
-                {{ coupon.thresholdAmount > 0 ? `满${formatCouponAmount(coupon.thresholdAmount)}可用` : "无门槛" }}
+                {{
+                  coupon.thresholdAmount > 0
+                    ? `满${formatCouponAmount(coupon.thresholdAmount)}可用`
+                    : "无门槛"
+                }}
               </text>
             </view>
             <view class="coupon-card__content">
@@ -186,6 +213,8 @@
       </view>
     </wd-popup>
 
+    <wd-message-box />
+
     <template #footer>
       <view v-if="quote && !loadError" class="confirm-footer">
         <view class="confirm-footer__amount">
@@ -198,7 +227,7 @@
             plain
             type="primary"
             :loading="submittingMode === 'proxy'"
-            :disabled="Boolean(submittingMode) || benefitsLoading"
+            :disabled="Boolean(submittingMode) || benefitsLoading || agreementLoading"
             @click="submit('proxy')"
           >
             好友代付
@@ -206,7 +235,7 @@
           <wd-button
             type="primary"
             :loading="submittingMode === 'self'"
-            :disabled="Boolean(submittingMode) || benefitsLoading"
+            :disabled="Boolean(submittingMode) || benefitsLoading || agreementLoading"
             @click="submit('self')"
           >
             {{ createdOrder ? "继续支付" : quote.payAmount === 0 ? "确认订单" : "立即支付" }}
@@ -218,6 +247,8 @@
 </template>
 
 <script setup lang="ts">
+import { useMessage } from "wot-design-uni";
+import AgreementAPI, { AgreementType, type PublishedAgreement } from "@/api/agreement";
 import OrderAPI, {
   type AvailableCoupon,
   type OrderDetail,
@@ -229,11 +260,7 @@ import ProductAPI from "@/api/product";
 import { RoutePath } from "@/constants";
 import { useCartStore } from "@/stores/cart";
 import { useUserStore } from "@/stores/user";
-import {
-  parseCheckoutSource,
-  resolvePointsToUse,
-  type CheckoutSource,
-} from "@/utils/checkout";
+import { parseCheckoutSource, resolvePointsToUse, type CheckoutSource } from "@/utils/checkout";
 import { formatDate, formatPrice } from "@/utils/format";
 import { navigate } from "@/utils/navigate";
 import { invokeWechatPayment } from "@/utils/payment";
@@ -249,6 +276,7 @@ interface DisplayItem {
 
 const cartStore = useCartStore();
 const userStore = useUserStore();
+const message = useMessage();
 const source = ref<CheckoutSource>();
 const displayItems = ref<DisplayItem[]>([]);
 const quote = ref<OrderQuote>();
@@ -265,6 +293,10 @@ const submittingMode = ref<"self" | "proxy" | "">("");
 const benefitsLoading = ref(false);
 const loadError = ref("");
 const routeOptions = ref<Record<string, string>>({});
+const agreement = ref<PublishedAgreement>();
+const agreementAccepted = ref(false);
+const agreementLoading = ref(false);
+const agreementError = ref("");
 
 const selectedCoupon = computed(() =>
   coupons.value.find((coupon) => coupon.memberCouponId === selectedCouponId.value)
@@ -315,6 +347,19 @@ async function loadDisplayItems() {
   ];
 }
 
+async function loadAgreement() {
+  agreementLoading.value = true;
+  agreementError.value = "";
+  try {
+    agreement.value = await AgreementAPI.get(AgreementType.MEDICAL_INFORMED_CONSENT);
+  } catch {
+    agreement.value = undefined;
+    agreementError.value = "协议暂不可用，请稍后重试";
+  } finally {
+    agreementLoading.value = false;
+  }
+}
+
 async function loadCheckout() {
   if (loading.value) return;
   loading.value = true;
@@ -324,7 +369,7 @@ async function loadCheckout() {
     if (!userStore.userInfo.id) await userStore.fetchUserInfo();
     contactName.value ||= userStore.userInfo.nickname || "";
     contactMobile.value ||= userStore.userInfo.phone || "";
-    await loadDisplayItems();
+    await Promise.all([loadDisplayItems(), loadAgreement()]);
     try {
       coupons.value = await OrderAPI.availableCoupons(source.value);
     } catch {
@@ -403,6 +448,10 @@ function validateContact(): boolean {
   return true;
 }
 
+function openAgreement() {
+  navigate(RoutePath.AGREEMENT, { params: { type: AgreementType.MEDICAL_INFORMED_CONSENT } });
+}
+
 async function continuePayment(order: OrderDetail) {
   if (order.payAmount === 0) {
     navigate(RoutePath.ORDER_PAY_RESULT, {
@@ -445,8 +494,25 @@ async function submit(mode: "self" | "proxy") {
     !validateContact()
   )
     return;
+  if (!agreement.value) {
+    await loadAgreement();
+    if (!agreement.value) {
+      uni.showToast({ title: "协议暂不可用，请稍后重试", icon: "none" });
+      return;
+    }
+  }
   submittingMode.value = mode;
   try {
+    if (!agreementAccepted.value) {
+      const result = await message.confirm({
+        title: "提示",
+        msg: "购买商品，请先阅读并同意",
+        confirmButtonText: "同意",
+        cancelButtonText: "我再想想",
+      });
+      if (result.action !== "confirm") return;
+      agreementAccepted.value = true;
+    }
     const order = await ensureOrderCreated();
     if (mode === "proxy") {
       navigate(RoutePath.ORDER_PROXY_PAY, {
@@ -567,6 +633,31 @@ onLoad((options) => {
     font-weight: 700;
     color: $color-text-title;
     border-top: 1rpx solid $color-line;
+  }
+}
+
+.confirm-agreement {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: flex-start;
+  padding: $spacing-md $page-padding $spacing-lg;
+  font-size: $font-size-xs;
+  line-height: 1.6;
+  color: $color-text-sub;
+  background: $color-bg;
+
+  &__copy {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__link {
+    color: $color-primary;
+  }
+
+  &__error {
+    display: block;
+    color: $color-danger;
   }
 }
 
