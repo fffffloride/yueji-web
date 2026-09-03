@@ -42,13 +42,32 @@ function showErrorToast(message: string): void {
   uni.showToast({ title: message, icon: "none", duration: 2000 });
 }
 
+function currentPageUrl(): string | undefined {
+  const pages = getCurrentPages();
+  const current = pages[pages.length - 1] as
+    | {
+        route?: string;
+        options?: Record<string, unknown>;
+        $page?: { fullPath?: string };
+      }
+    | undefined;
+  if (!current?.route) return undefined;
+  const fullPath = current.$page?.fullPath;
+  if (fullPath) {
+    const path = fullPath.startsWith("/") ? fullPath : `/${fullPath}`;
+    return path.split("?", 1)[0] === RoutePath.LOGIN ? undefined : path;
+  }
+  const path = current.route.startsWith("/") ? current.route : `/${current.route}`;
+  return path === RoutePath.LOGIN ? undefined : `${path}${buildQuery(current.options)}`;
+}
+
 function handleUnauthorized(): void {
   clearAccessToken();
   if (isRedirectingToLogin) return;
 
   isRedirectingToLogin = true;
   uni.navigateTo({
-    url: RoutePath.LOGIN,
+    url: `${RoutePath.LOGIN}${buildQuery({ from: currentPageUrl() })}`,
     complete: () => {
       isRedirectingToLogin = false;
     },

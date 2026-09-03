@@ -47,11 +47,15 @@ export interface OrderProduct {
   skuId: string;
   productName: string;
   productImage?: string | null;
-  skuName: string;
-  price: number;
+  skuName?: string | null;
+  /** 受赠人视图不返回金额。 */
+  price?: number;
   quantity: number;
-  subtotal: number;
+  /** 受赠人视图不返回金额。 */
+  subtotal?: number;
 }
+
+export type OrderViewerRole = "PURCHASER" | "BENEFICIARY";
 
 export interface OrderAppointmentSummary {
   id: string;
@@ -63,17 +67,22 @@ export interface OrderDetail {
   orderNo: string;
   status: number;
   statusLabel: string;
-  totalAmount: number;
-  discountAmount: number;
-  payAmount: number;
+  totalAmount?: number;
+  discountAmount?: number;
+  payAmount?: number;
   createTime: string;
   contactName?: string | null;
   contactMobile?: string | null;
   remark?: string | null;
   items: OrderProduct[];
-  pricing: OrderQuote;
+  pricing?: OrderQuote;
+  verifyCode?: string;
   appointment: OrderAppointmentSummary | null;
   canBookAppointment: boolean;
+  viewerRole: OrderViewerRole;
+  giftId: string | null;
+  canGift: boolean;
+  canReturnGift: boolean;
 }
 
 export interface OrderListItem {
@@ -81,13 +90,17 @@ export interface OrderListItem {
   orderNo: string;
   status: number;
   statusLabel: string;
-  totalAmount: number;
-  discountAmount: number;
-  payAmount: number;
+  totalAmount?: number;
+  discountAmount?: number;
+  payAmount?: number;
   createTime: string;
   items: OrderProduct[];
   appointment: OrderAppointmentSummary | null;
   canBookAppointment: boolean;
+  viewerRole: OrderViewerRole;
+  giftId: string | null;
+  canGift: boolean;
+  canReturnGift: boolean;
 }
 
 export interface OrderQueryParams extends BaseQueryParams {

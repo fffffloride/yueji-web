@@ -3,7 +3,7 @@
     <view class="order-card__head" @click="emit('detail', order)">
       <text class="order-card__time">下单时间：{{ formatDate(order.createTime) }}</text>
       <text class="order-card__status" :class="`order-card__status--${statusTone}`">
-        {{ order.statusLabel }}
+        {{ isGiftRecipient ? `好友赠礼 · ${order.statusLabel}` : order.statusLabel }}
       </text>
     </view>
 
@@ -23,7 +23,9 @@
           <text v-if="item.skuName" class="order-card__sku">{{ item.skuName }}</text>
           <text class="order-card__quantity">×{{ item.quantity }}</text>
         </view>
-        <text class="order-card__item-price">{{ formatPrice(item.price, true) }}</text>
+        <text v-if="!isGiftRecipient && item.price !== undefined" class="order-card__item-price">
+          {{ formatPrice(item.price, true) }}
+        </text>
       </view>
 
       <view v-if="order.items.length === 0" class="order-card__empty-item">项目详情暂不可用</view>
@@ -31,9 +33,10 @@
 
     <view class="order-card__summary">
       <text>共 {{ totalQuantity }} 个项目</text>
-      <view class="order-card__paid">
+      <view v-if="isGiftRecipient" class="order-card__gift-note">赠礼金额已隐藏</view>
+      <view v-else class="order-card__paid">
         <text>实付：</text>
-        <text class="order-card__paid-price">{{ formatPrice(order.payAmount, true) }}</text>
+        <text class="order-card__paid-price">{{ formatPrice(order.payAmount ?? 0, true) }}</text>
       </view>
     </view>
 
@@ -56,6 +59,9 @@
       </template>
       <template v-else-if="order.status === OrderStatusEnum.PAID">
         <view class="order-card__button" @click.stop="emit('detail', order)">查看详情</view>
+        <view v-if="showGiftAction" class="order-card__button" @click.stop="emit('gift', order)">
+          {{ giftActionLabel }}
+        </view>
         <view
           v-if="order.canBookAppointment"
           class="order-card__button order-card__button--primary"
@@ -84,6 +90,7 @@ const emit = defineEmits<{
   (e: "detail", order: OrderListItem): void;
   (e: "pay", order: OrderListItem): void;
   (e: "appointment", order: OrderListItem): void;
+  (e: "gift", order: OrderListItem): void;
 }>();
 
 const failedImageIds = ref<string[]>([]);
@@ -91,6 +98,12 @@ const failedImageIds = ref<string[]>([]);
 const totalQuantity = computed(() =>
   props.order.items.reduce((total, item) => total + item.quantity, 0)
 );
+const isGiftRecipient = computed(() => props.order.viewerRole === "BENEFICIARY");
+const showGiftAction = computed(() => props.order.canGift || Boolean(props.order.giftId));
+const giftActionLabel = computed(() => {
+  if (props.order.canGift) return "赠送好友";
+  return isGiftRecipient.value ? "赠礼记录" : "转赠记录";
+});
 
 const statusTone = computed(() => {
   if (props.order.status === OrderStatusEnum.UNPAID) return "warning";
@@ -241,6 +254,11 @@ const statusTone = computed(() => {
   margin-left: $spacing-md;
 }
 
+.order-card__gift-note {
+  margin-left: $spacing-md;
+  color: $color-primary;
+}
+
 .order-card__paid-price {
   font-size: $font-size-lg;
   font-weight: 700;
@@ -249,6 +267,7 @@ const statusTone = computed(() => {
 
 .order-card__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: $spacing-sm;
   justify-content: flex-end;
   padding: 0 $spacing-md $spacing-md;

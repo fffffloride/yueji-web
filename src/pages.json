@@ -89,7 +89,11 @@
         },
         {
           "path": "gift/index",
-          "style": { "navigationBarTitleText": "订单送礼" }
+          "style": {
+            "navigationBarTitleText": "订单送礼",
+            "enablePullDownRefresh": true,
+            "enableShareAppMessage": true
+          }
         },
         {
           "path": "proxy-pay/index",

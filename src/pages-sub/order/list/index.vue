@@ -14,6 +14,11 @@
       </view>
 
       <view class="order-list__content">
+        <view class="order-list__gift-entry" @click="openGiftRecords">
+          <text>赠礼记录</text>
+          <wd-icon name="chevron-right" size="30rpx" />
+        </view>
+
         <view v-if="loading && orders.length === 0" class="order-list__loading">
           <wd-loading size="48rpx" />
         </view>
@@ -33,6 +38,7 @@
             @cancel="cancelOrder"
             @appointment="makeAppointment"
             @detail="viewOrder"
+            @gift="openGift"
             @pay="continuePayment"
           />
 
@@ -130,6 +136,21 @@ function makeAppointment(order: OrderListItem): void {
   }
   appointmentOrderId.value = order.id;
   appointmentDrawerVisible.value = true;
+}
+
+function openGift(order: OrderListItem): void {
+  navigate(RoutePath.ORDER_GIFT, {
+    requireAuth: true,
+    params: order.canGift
+      ? { orderId: order.id }
+      : {
+          direction: order.viewerRole === "BENEFICIARY" ? "RECEIVED" : "SENT",
+        },
+  });
+}
+
+function openGiftRecords(): void {
+  navigate(RoutePath.ORDER_GIFT, { requireAuth: true });
 }
 
 async function handleAppointmentSuccess(): Promise<void> {
@@ -260,6 +281,18 @@ onPullDownRefresh(async () => {
 
 .order-list__content {
   padding: $spacing-md $page-padding;
+}
+
+.order-list__gift-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-primary;
+  background: $color-bg;
+  border-radius: $radius-card;
 }
 
 .order-list__loading {
