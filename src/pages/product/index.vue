@@ -59,7 +59,6 @@
           </view>
           <YjEmpty
             v-else-if="catalog.groups.length === 0"
-            image="search"
             text="暂无符合条件的商品"
           />
 
@@ -103,9 +102,11 @@
               <view v-if="group.sections.length > 1" class="product-catalog__section-title">
                 {{ section.name }} ({{ section.total }})
               </view>
-              <view v-if="section.products.length === 0" class="product-catalog__section-empty">
-                暂无商品
-              </view>
+              <YjEmpty
+                v-if="section.products.length === 0"
+                compact
+                text="暂无商品"
+              />
               <YjProductCard
                 v-for="product in section.products"
                 :key="product.id"
@@ -178,7 +179,6 @@
             <YjProductCard v-for="product in searchProducts" :key="product.id" :product="product" />
             <YjEmpty
               v-if="!searchLoading && searchProducts.length === 0"
-              image="search"
               text="没有找到相关商品"
             />
             <view v-else-if="searchFinished && searchProducts.length > 0" class="search-end">
@@ -659,15 +659,6 @@ onBeforeUnmount(() => {
   &__section-title {
     padding: 24rpx 0 8rpx;
     font-size: 30rpx;
-  }
-
-  &__section-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 180rpx;
-    font-size: $font-size-sm;
-    color: $color-text-placeholder;
   }
 
   &__status {

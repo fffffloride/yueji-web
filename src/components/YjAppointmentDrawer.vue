@@ -74,9 +74,7 @@
           <text>{{ slotsError }}</text>
           <text class="appointment-drawer__retry" @click="loadSlots">重新加载</text>
         </view>
-        <view v-else-if="slots.length === 0" class="appointment-drawer__state">
-          当日暂无可预约时间
-        </view>
+        <YjEmpty v-else-if="slots.length === 0" compact text="当日暂无可预约时间" />
         <view v-else class="appointment-drawer__time-grid">
           <button
             v-for="slot in slots"

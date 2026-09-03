@@ -10,7 +10,7 @@
         <wd-loading size="48rpx" />
         <text>加载中</text>
       </view>
-      <YjEmpty v-else-if="focusError" image="content" :text="focusError">
+      <YjEmpty v-else-if="focusError" image="network" :text="focusError">
         <view class="gift-link" @click="reloadFocus">重新加载</view>
       </YjEmpty>
       <template v-else-if="focusItems.length">

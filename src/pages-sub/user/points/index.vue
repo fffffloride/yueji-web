@@ -43,7 +43,11 @@
           <view class="points-detail__retry" @click="loadPage(true)">重新加载</view>
         </YjEmpty>
 
-        <YjEmpty v-else-if="logs.length === 0" text="暂无积分记录" />
+        <YjEmpty
+          v-else-if="logs.length === 0"
+          text="暂无积分记录"
+          description="完成消费后，积分变化会显示在这里"
+        />
 
         <view v-else class="points-list">
           <view v-for="item in logs" :key="item.id" class="points-list__item">

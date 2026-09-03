@@ -16,7 +16,7 @@
     </view>
 
     <view v-else-if="!cartStore.items.length" class="cart__empty">
-      <YjEmpty image="collect" text="购物车还是空的">
+      <YjEmpty text="购物车还是空的">
         <wd-button size="small" type="primary" @click="goShopping">去选项目</wd-button>
       </YjEmpty>
     </view>
