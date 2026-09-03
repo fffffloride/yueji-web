@@ -70,6 +70,7 @@ export interface OrderDetail {
   totalAmount?: number;
   discountAmount?: number;
   payAmount?: number;
+  payTime?: string | null;
   createTime: string;
   contactName?: string | null;
   contactMobile?: string | null;
@@ -77,6 +78,10 @@ export interface OrderDetail {
   items: OrderProduct[];
   pricing?: OrderQuote;
   verifyCode?: string;
+  verifyTime?: string | null;
+  verifyBy?: string | null;
+  cancelTime?: string | null;
+  cancelReason?: string | null;
   appointment: OrderAppointmentSummary | null;
   canBookAppointment: boolean;
   viewerRole: OrderViewerRole;

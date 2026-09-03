@@ -85,7 +85,7 @@
         },
         {
           "path": "detail/index",
-          "style": { "navigationBarTitleText": "订单详情" }
+          "style": { "navigationBarTitleText": "订单详情", "enablePullDownRefresh": true }
         },
         {
           "path": "gift/index",
