@@ -32,17 +32,17 @@
           <view class="mine-member__fill" :style="{ width: `${progress}%` }" />
         </view>
       </view>
-    </view>
 
-    <view class="mine-member__stats">
-      <view
-        v-for="(stat, index) in member.stats"
-        :key="stat.label"
-        class="mine-member__stat"
-        @click="emit('stat', index)"
-      >
-        <text class="mine-member__stat-value">{{ !loggedIn ? "—" : stat.count }}</text>
-        <text class="mine-member__stat-label">{{ stat.label }}</text>
+      <view class="mine-member__stats">
+        <view
+          v-for="(stat, index) in member.stats"
+          :key="stat.label"
+          class="mine-member__stat"
+          @click="emit('stat', index)"
+        >
+          <text class="mine-member__stat-value">{{ !loggedIn ? "—" : stat.count }}</text>
+          <text class="mine-member__stat-label">{{ stat.label }}</text>
+        </view>
       </view>
     </view>
   </view>
@@ -270,12 +270,9 @@ function handleProfileClick() {
 
 .mine-member__stats {
   display: flex;
-  padding: 28rpx 12rpx;
-  margin: 16rpx 24rpx 0;
-  background: rgba($color-bg, 0.96);
-  border: 2rpx solid rgba($color-primary-dark, 0.05);
-  border-radius: 24rpx;
-  box-shadow: 0 14rpx 38rpx rgba($color-primary-dark, 0.07);
+  padding: 28rpx 0 0;
+  margin-top: 32rpx;
+  border-top: 2rpx solid $color-line;
 }
 
 .mine-member__stat {
