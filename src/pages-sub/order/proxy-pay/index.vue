@@ -48,7 +48,7 @@
           </view>
 
           <view class="proxy-total">
-            <text>待支付</text>
+            <text>{{ amountLabel }}</text>
             <text class="proxy-total__amount">{{ formatPrice(preview.payAmount, true) }}</text>
           </view>
         </view>
@@ -173,6 +173,16 @@ const terminal = computed(() =>
   preview.value ? TERMINAL_STATUSES.has(preview.value.status) : false
 );
 const ownerName = computed(() => preview.value?.ownerNickname?.trim() || "好友");
+const amountLabel = computed(() => {
+  if (preview.value?.status === ProxyPayStatus.PAID) return "已支付";
+  if (preview.value?.status === ProxyPayStatus.REFUNDED) return "已退款";
+  if (
+    preview.value?.status === ProxyPayStatus.CANCELLED ||
+    preview.value?.status === ProxyPayStatus.EXPIRED
+  )
+    return "订单金额";
+  return "待支付";
+});
 const expiryCountdown = computed(() =>
   preview.value ? formatCountdown(remainingSeconds(preview.value.expiresAt, now.value)) : "00:00:00"
 );
