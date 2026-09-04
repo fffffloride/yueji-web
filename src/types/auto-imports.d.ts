@@ -78,6 +78,7 @@ declare global {
   const unref: typeof import('vue')['unref']
   const useAppStore: typeof import('../stores/app')['useAppStore']
   const useAppStoreHook: typeof import('../stores/app')['useAppStoreHook']
+  const useAppointmentDateScroll: typeof import('../composables/useAppointmentDateScroll')['useAppointmentDateScroll']
   const useAttrs: typeof import('vue')['useAttrs']
   const useCartStore: typeof import('../stores/cart')['useCartStore']
   const useCartStoreHook: typeof import('../stores/cart')['useCartStoreHook']

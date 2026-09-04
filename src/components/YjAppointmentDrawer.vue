@@ -43,19 +43,43 @@
           <text>{{ selectedDateText }}</text>
         </view>
         <view class="appointment-drawer__dates">
-          <scroll-view class="appointment-drawer__date-scroll" scroll-x :show-scrollbar="false">
-            <view class="appointment-drawer__date-list">
-              <view
-                v-for="date in dateOptions"
-                :key="date.value"
-                class="appointment-drawer__date"
-                :class="{ 'is-active': selectedDate === date.value }"
-                @click="selectDate(date.value)"
-              >
-                <text>{{ date.caption }}</text>
-                <text>{{ date.label }}</text>
+          <scroll-view
+            class="appointment-drawer__date-scroll"
+            scroll-x
+            :show-scrollbar="false"
+            :scroll-left="dateScrollLeft"
+            @scroll="dateDrag.onScroll"
+          >
+            <!-- #ifdef H5 -->
+            <!-- 原生节点保留 PointerEvent 字段，uni-view 会将这些字段过滤。 -->
+            <div
+              class="appointment-drawer__date-list"
+              @pointerdown="dateDrag.onPointerDown"
+              @pointermove="dateDrag.onPointerMove"
+              @pointerup="dateDrag.onPointerUp"
+              @pointercancel="dateDrag.onPointerUp"
+              @click.capture="dateDrag.onClickCapture"
+            >
+              <!-- #endif -->
+              <!-- #ifndef H5 -->
+              <view class="appointment-drawer__date-list">
+                <!-- #endif -->
+                <view
+                  v-for="date in dateOptions"
+                  :key="date.value"
+                  class="appointment-drawer__date"
+                  :class="{ 'is-active': selectedDate === date.value }"
+                  @click="selectDate(date.value)"
+                >
+                  <text>{{ date.caption }}</text>
+                  <text>{{ date.label }}</text>
+                </view>
+                <!-- #ifndef H5 -->
               </view>
-            </view>
+              <!-- #endif -->
+              <!-- #ifdef H5 -->
+            </div>
+            <!-- #endif -->
           </scroll-view>
           <view class="appointment-drawer__calendar" @click="calendarVisible = true">
             <wd-icon name="calendar" size="36rpx" />
@@ -128,6 +152,10 @@ import AppointmentAPI, {
 } from "@/api/appointment";
 import OrderAPI, { type OrderDetail } from "@/api/order";
 import AppointmentCalendarDrawer from "@/pages/appointment/components/AppointmentCalendarDrawer.vue";
+import { useAppointmentDateScroll } from "@/composables/useAppointmentDateScroll";
+
+const dateDrag = useAppointmentDateScroll();
+const dateScrollLeft = dateDrag.scrollLeft;
 
 export type AppointmentDrawerMode = "create" | "reschedule";
 
@@ -464,6 +492,16 @@ watch(
     flex: 1;
     min-width: 0;
     white-space: nowrap;
+
+    /* #ifdef H5 */
+    cursor: grab;
+    user-select: none;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    /* #endif */
   }
 
   &__date-list {
