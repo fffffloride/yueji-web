@@ -84,6 +84,7 @@ declare global {
   const useCartStoreHook: typeof import('../stores/cart')['useCartStoreHook']
   const useCssModule: typeof import('vue')['useCssModule']
   const useCssVars: typeof import('vue')['useCssVars']
+  const useDistributionPage: typeof import('../composables/useDistributionPage')['useDistributionPage']
   const useId: typeof import('vue')['useId']
   const useLoadMore: typeof import('../composables/useLoadMore')['useLoadMore']
   const useLogin: typeof import('../composables/useLogin')['useLogin']
@@ -187,11 +188,13 @@ declare module 'vue' {
     readonly unref: UnwrapRef<typeof import('vue')['unref']>
     readonly useAppStore: UnwrapRef<typeof import('../stores/app')['useAppStore']>
     readonly useAppStoreHook: UnwrapRef<typeof import('../stores/app')['useAppStoreHook']>
+    readonly useAppointmentDateScroll: UnwrapRef<typeof import('../composables/useAppointmentDateScroll')['useAppointmentDateScroll']>
     readonly useAttrs: UnwrapRef<typeof import('vue')['useAttrs']>
     readonly useCartStore: UnwrapRef<typeof import('../stores/cart')['useCartStore']>
     readonly useCartStoreHook: UnwrapRef<typeof import('../stores/cart')['useCartStoreHook']>
     readonly useCssModule: UnwrapRef<typeof import('vue')['useCssModule']>
     readonly useCssVars: UnwrapRef<typeof import('vue')['useCssVars']>
+    readonly useDistributionPage: UnwrapRef<typeof import('../composables/useDistributionPage')['useDistributionPage']>
     readonly useId: UnwrapRef<typeof import('vue')['useId']>
     readonly useLoadMore: UnwrapRef<typeof import('../composables/useLoadMore')['useLoadMore']>
     readonly useLogin: UnwrapRef<typeof import('../composables/useLogin')['useLogin']>

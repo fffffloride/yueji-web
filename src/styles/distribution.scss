@@ -1,0 +1,265 @@
+.distribution {
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  color: $color-text-content;
+}
+
+.distribution-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 420rpx;
+}
+
+.distribution-card {
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  background: $color-bg;
+  border-radius: 24rpx;
+}
+
+.distribution-hero {
+  padding: 36rpx 28rpx;
+  margin-bottom: 24rpx;
+  color: $color-bg;
+  background: $color-primary-dark;
+  border-radius: 24rpx;
+}
+
+.distribution-title {
+  margin-bottom: 16rpx;
+  font-size: $font-size-lg;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.distribution-amount {
+  margin: 12rpx 0 24rpx;
+  font-size: 60rpx;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.distribution-caption {
+  font-size: $font-size-sm;
+  line-height: 1.6;
+  color: $color-text-sub;
+  overflow-wrap: anywhere;
+}
+
+.distribution-hero .distribution-caption {
+  color: rgba($color-bg, 0.8);
+}
+
+.distribution-row {
+  display: flex;
+  gap: 16rpx;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 80rpx;
+  overflow-wrap: anywhere;
+}
+
+.distribution-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20rpx;
+  margin: 24rpx 0;
+}
+
+.distribution-metrics--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.distribution-value {
+  margin-bottom: 8rpx;
+  font-size: $font-size-lg;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.distribution-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 96rpx;
+  padding: 12rpx 0;
+  font-size: $font-size-md;
+  line-height: 1.5;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1rpx solid $color-line;
+  border-radius: 0;
+
+  &::after {
+    border: 0;
+  }
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.distribution-tag {
+  flex-shrink: 0;
+  padding: 6rpx 14rpx;
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: $color-primary-tint;
+  border-radius: 10rpx;
+}
+
+.distribution-notice {
+  padding: 20rpx 24rpx;
+  margin-bottom: 24rpx;
+  font-size: $font-size-sm;
+  line-height: 1.6;
+  color: $color-text-content;
+  background: $color-surface-warm;
+  border-radius: 16rpx;
+}
+
+.distribution-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  align-items: center;
+  margin-top: 20rpx;
+}
+
+.distribution-picker {
+  flex: 1;
+  min-width: 210rpx;
+  padding: 20rpx 16rpx;
+  font-size: $font-size-sm;
+  text-align: center;
+  background: $color-bg-page;
+  border-radius: 12rpx;
+}
+
+.distribution-details {
+  padding-top: 20rpx;
+  margin-top: 16rpx;
+  font-size: $font-size-sm;
+  line-height: 1.8;
+  color: $color-text-sub;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  border-top: 1rpx solid $color-line;
+}
+
+.distribution-more {
+  padding: 20rpx 0 32rpx;
+  font-size: $font-size-sm;
+  color: $color-text-sub;
+  text-align: center;
+}
+
+.distribution-progress {
+  height: 12rpx;
+  margin: 24rpx 0 12rpx;
+  overflow: hidden;
+  background: $color-primary-tint;
+  border-radius: 6rpx;
+}
+
+.distribution-progress__fill {
+  height: 100%;
+  background: $color-primary;
+  border-radius: 6rpx;
+}
+
+.distribution-drawer {
+  padding: 32rpx;
+  color: $color-text-content;
+}
+
+.distribution-input {
+  height: 100rpx;
+  padding: 20rpx;
+  margin: 24rpx 0;
+  font-size: 40rpx;
+  background: $color-bg-page;
+  border-radius: 12rpx;
+}
+
+.distribution-error {
+  margin: 16rpx 0;
+  font-size: $font-size-sm;
+  line-height: 1.6;
+  color: $color-danger;
+}
+
+.distribution-stat {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  font-size: $font-size-xs;
+  line-height: 1.5;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+
+  &::after {
+    border: 0;
+  }
+}
+
+.distribution-description {
+  font-size: $font-size-md;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.distribution-trend {
+  margin: 24rpx 0;
+}
+
+.distribution-trend__bars {
+  display: flex;
+}
+
+.distribution-trend__column {
+  flex: 0 0 120rpx;
+  width: 120rpx;
+  text-align: center;
+}
+
+.distribution-trend__plot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 280rpx;
+  border-bottom: 1rpx solid $color-border;
+}
+
+.distribution-trend__value {
+  margin-bottom: 8rpx;
+  font-size: 20rpx;
+  color: $color-text-sub;
+}
+
+.distribution-trend__bar {
+  width: 36rpx;
+  background: $color-primary;
+  border-radius: 6rpx 6rpx 0 0;
+}
+
+.distribution-trend__period {
+  margin-top: 12rpx;
+  font-size: 20rpx;
+  color: $color-text-sub;
+}
+
+.distribution-drawer .distribution-actions {
+  display: block;
+}

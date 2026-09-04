@@ -50,6 +50,8 @@ export const RoutePath = {
   DISTRIBUTION_COMMISSION: "/pages-sub/distribution/commission/index",
   DISTRIBUTION_MATERIAL: "/pages-sub/distribution/material/index",
   DISTRIBUTION_TASK: "/pages-sub/distribution/task/index",
+  DISTRIBUTION_TASK_DETAIL: "/pages-sub/distribution/task-detail/index",
+  DISTRIBUTION_ANALYTICS: "/pages-sub/distribution/analytics/index",
   DISTRIBUTION_WALLET: "/pages-sub/distribution/wallet/index",
 
   NOTICE: "/pages-sub/common/notice/index",

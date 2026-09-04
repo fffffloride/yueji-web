@@ -19,7 +19,17 @@
 
       <!-- 服务入口 -->
       <view class="mine-section">
-        <YjMineServiceGrid :items="mineServices" @select="handleServiceSelect" />
+        <view v-if="distributionError" class="mine-distribution-error">
+          <text>分销身份暂时无法加载</text>
+          <wd-button
+            size="small"
+            type="text"
+            :loading="distributionLoading"
+            @click="loadDistributionProfile"
+            >重试</wd-button
+          >
+        </view>
+        <YjMineServiceGrid :items="serviceEntries" @select="handleServiceSelect" />
       </view>
 
       <!-- 退出登录：未登录不展示 -->
@@ -66,6 +76,9 @@ import AppointmentAPI, {
   type AppointmentSummary,
 } from "@/api/appointment";
 import MarketingAPI, { type PointsAccount } from "@/api/marketing";
+import DistributionAPI from "@/api/distribution";
+import { hasDistributionAccess } from "@/utils/distribution";
+import { getAccessToken } from "@/utils/auth";
 import { RoutePath } from "@/constants";
 import { mineQuickTools, mineServices, type MemberInfo } from "@/mocks/mine";
 import { useUserStore } from "@/stores/user";
@@ -92,6 +105,10 @@ const instance = getCurrentInstance();
 const memberAccount = ref<PointsAccount | null>(null);
 const appointmentSummary = ref<AppointmentSummary | null>(null);
 const appointmentDrawerVisible = ref(false);
+const distributionStatus = ref<number>();
+const distributionError = ref(false);
+const distributionLoading = ref(false);
+let distributionSequence = 0;
 const consultX = ref(CONSULT_INITIAL_POSITION);
 const consultY = ref(CONSULT_INITIAL_POSITION);
 
@@ -132,6 +149,32 @@ const SERVICE_ROUTES: { path: string; requireAuth: boolean }[] = [
   { path: RoutePath.BRAND, requireAuth: false },
   { path: RoutePath.USER_SETTINGS, requireAuth: true },
 ];
+
+const serviceEntries = computed(() => [
+  ...(userStore.isLoggedIn && hasDistributionAccess(distributionStatus.value)
+    ? [{ label: "我的分销", path: RoutePath.DISTRIBUTION, requireAuth: true }]
+    : []),
+  ...mineServices.map((item, index) => ({ ...item, ...SERVICE_ROUTES[index] })),
+]);
+
+async function loadDistributionProfile() {
+  const sequence = ++distributionSequence;
+  const token = getAccessToken();
+  distributionStatus.value = undefined;
+  distributionError.value = false;
+  if (!userStore.isLoggedIn || !token) return;
+  distributionLoading.value = true;
+  try {
+    const result = await DistributionAPI.getProfile();
+    if (sequence === distributionSequence && token === getAccessToken())
+      distributionStatus.value = result.agent?.status;
+  } catch {
+    if (sequence === distributionSequence && token === getAccessToken())
+      distributionError.value = true;
+  } finally {
+    if (sequence === distributionSequence) distributionLoading.value = false;
+  }
+}
 
 /** 未登录时点击需要登录的入口先走登录流程。 */
 function handleEntryClick(path: string, requireAuth = true) {
@@ -233,7 +276,7 @@ function handleQuickTool(index: number) {
 }
 
 function handleServiceSelect(index: number) {
-  const route = SERVICE_ROUTES[index];
+  const route = serviceEntries.value[index];
   if (route) handleEntryClick(route.path, route.requireAuth);
 }
 
@@ -286,13 +329,16 @@ async function handleLogout() {
   });
   if (result.action === "confirm") {
     userStore.logout();
+    distributionSequence++;
+    distributionStatus.value = undefined;
+    distributionError.value = false;
     appointmentSummary.value = null;
     uni.showToast({ title: "已退出登录", icon: "none" });
   }
 }
 
 onShow(() => {
-  void Promise.all([loadMemberAccount(), loadAppointmentSummary()]);
+  void Promise.all([loadMemberAccount(), loadAppointmentSummary(), loadDistributionProfile()]);
   const params = consumeTabBarParams(RoutePath.MINE);
   if (params?.openAppointment === "1" && userStore.isLoggedIn) {
     appointmentDrawerVisible.value = true;
@@ -323,6 +369,15 @@ onReady(() => {
     border: 2rpx solid rgba($color-bg, 0.92);
     box-shadow: 0 12rpx 34rpx rgba($color-primary-dark, 0.06);
   }
+}
+
+.mine-distribution-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-sub;
 }
 
 .mine-logout__button {

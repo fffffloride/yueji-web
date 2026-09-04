@@ -222,20 +222,28 @@
       "root": "pages-sub/distribution",
       "pages": [
         {
+          "path": "analytics/index",
+          "style": { "navigationBarTitleText": "销售业绩", "enablePullDownRefresh": true }
+        },
+        {
+          "path": "task-detail/index",
+          "style": { "navigationBarTitleText": "任务详情", "enablePullDownRefresh": true }
+        },
+        {
           "path": "index/index",
-          "style": { "navigationBarTitleText": "分享中心" }
+          "style": { "navigationBarTitleText": "我的分销", "enablePullDownRefresh": true }
         },
         {
           "path": "merchant/index",
-          "style": { "navigationBarTitleText": "商户信息" }
+          "style": { "navigationBarTitleText": "代理资料", "enablePullDownRefresh": true }
         },
         {
           "path": "team/index",
-          "style": { "navigationBarTitleText": "团队管理" }
+          "style": { "navigationBarTitleText": "我的团队", "enablePullDownRefresh": true }
         },
         {
           "path": "commission/index",
-          "style": { "navigationBarTitleText": "佣金和收益" }
+          "style": { "navigationBarTitleText": "佣金明细", "enablePullDownRefresh": true }
         },
         {
           "path": "material/index",
@@ -243,11 +251,11 @@
         },
         {
           "path": "task/index",
-          "style": { "navigationBarTitleText": "销售任务" }
+          "style": { "navigationBarTitleText": "销售任务", "enablePullDownRefresh": true }
         },
         {
           "path": "wallet/index",
-          "style": { "navigationBarTitleText": "分销钱包" }
+          "style": { "navigationBarTitleText": "分销钱包", "enablePullDownRefresh": true }
         }
       ]
     },

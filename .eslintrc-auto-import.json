@@ -105,6 +105,7 @@
     "watchEffect": true,
     "watchPostEffect": true,
     "watchSyncEffect": true,
-    "useAppointmentDateScroll": true
+    "useAppointmentDateScroll": true,
+    "useDistributionPage": true
   }
 }

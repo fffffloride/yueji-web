@@ -1,5 +1,6 @@
 import type { BaseQueryParams, PageResult } from "@/api/common";
 import { appSettings } from "@/settings";
+import { onScopeDispose, readonly, ref, type Ref } from "vue";
 
 export interface UseLoadMoreOptions<T, P> {
   /** 分页请求方法。 */
@@ -25,29 +26,41 @@ export function useLoadMore<T, P extends object = object>(options: UseLoadMoreOp
   const pageNum = ref(1);
   const isLoading = ref(false);
   const isFinished = ref(false);
+  const error = ref("");
+  let sequence = 0;
 
   async function load(reset = false) {
-    if (isLoading.value) return;
+    if (!reset && isLoading.value) return;
     if (!reset && isFinished.value) return;
 
+    const current = reset ? ++sequence : sequence;
     isLoading.value = true;
+    error.value = "";
     if (reset) {
+      list.value = [];
+      total.value = 0;
       pageNum.value = 1;
       isFinished.value = false;
     }
 
+    const requestedPage = pageNum.value;
     try {
       const result = await fetcher({
         ...((params?.() ?? {}) as P),
-        pageNum: pageNum.value,
+        pageNum: requestedPage,
         pageSize,
       });
+      if (current !== sequence) return;
       list.value = reset ? result.list : [...list.value, ...result.list];
       total.value = result.total;
       isFinished.value = list.value.length >= result.total;
-      pageNum.value += 1;
+      pageNum.value = requestedPage + 1;
+    } catch (cause) {
+      if (current !== sequence) return;
+      error.value = cause instanceof Error ? cause.message : "加载失败，请重试";
+      throw cause;
     } finally {
-      isLoading.value = false;
+      if (current === sequence) isLoading.value = false;
     }
   }
 
@@ -59,13 +72,17 @@ export function useLoadMore<T, P extends object = object>(options: UseLoadMoreOp
     await load(false);
   }
 
-  if (immediate) refresh();
+  if (immediate) void refresh().catch(() => {});
+  onScopeDispose(() => {
+    sequence++;
+  });
 
   return {
     list,
     total: readonly(total),
     isLoading: readonly(isLoading),
     isFinished: readonly(isFinished),
+    error: readonly(error),
     refresh,
     loadMore,
   };
