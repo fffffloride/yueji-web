@@ -137,11 +137,11 @@
 
     <wd-popup
       v-model="cardDrawerVisible"
-      position="bottom"
+      position="right"
       root-portal
       safe-area-inset-bottom
       :z-index="1100"
-      custom-style="border-radius: 28rpx 28rpx 0 0; overflow: hidden;"
+      custom-style="width: 100%; height: 100%; box-sizing: border-box; overflow: hidden;"
       @after-leave="selectedCard = undefined"
     >
       <view v-if="selectedCard" class="home-card-drawer">
@@ -542,7 +542,7 @@ onPullDownRefresh(async () => {
 .home-card-drawer {
   display: flex;
   flex-direction: column;
-  height: 80vh;
+  height: 100%;
   background-color: $color-bg;
 
   &__header {
@@ -550,7 +550,7 @@ onPullDownRefresh(async () => {
     flex-shrink: 0;
     align-items: flex-start;
     justify-content: space-between;
-    padding: $spacing-md $page-padding;
+    padding: calc(#{$spacing-md} + env(safe-area-inset-top)) $page-padding $spacing-md;
     border-bottom: 2rpx solid $color-line;
   }
 
