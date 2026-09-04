@@ -15,6 +15,7 @@ const DecorationAPI = {
       notices: result.notices ?? [],
       brandContent: result.brandContent ?? "",
       cards: result.cards ?? [],
+      promoCards: result.promoCards ?? [],
     };
   },
 };

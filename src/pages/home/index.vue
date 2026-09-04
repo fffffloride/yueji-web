@@ -23,7 +23,7 @@
         @change="handleHeroChange"
       >
         <swiper-item v-for="banner in homeDecoration.banners" :key="banner.id">
-          <view class="home-hero__slide" @click="openBanner(banner)">
+          <view class="home-hero__slide" @click="openLink(banner.linkUrl)">
             <image
               v-if="!failedBannerIds.includes(banner.id)"
               class="home-hero__image"
@@ -88,12 +88,12 @@
       </view>
 
       <!-- 2×2 活动宫格 -->
-      <view class="home-promo">
+      <view v-if="homeDecoration.promoCards.length" class="home-promo">
         <YjActivityCard
-          v-for="card in promoCards"
-          :key="card.title"
+          v-for="(card, index) in homeDecoration.promoCards"
+          :key="index"
           :card="card"
-          @click="handleComingSoon"
+          @click="openLink(card.linkUrl)"
         />
       </view>
 
@@ -170,13 +170,9 @@
 
 <script setup lang="ts">
 import { AppointmentTab, PRIMARY_APPOINTMENT_TABS } from "@/api/appointment";
-import DecorationAPI, {
-  type HomeBanner,
-  type HomeCard,
-  type HomeDecoration,
-} from "@/api/decoration";
+import DecorationAPI, { type HomeCard, type HomeDecoration } from "@/api/decoration";
 import { RoutePath } from "@/constants";
-import { newUserCoupon, promoCards, quickEntries } from "@/mocks/home";
+import { newUserCoupon, quickEntries } from "@/mocks/home";
 import { useUserStore } from "@/stores/user";
 import { consumeTabBarParams, navigate } from "@/utils/navigate";
 
@@ -187,6 +183,7 @@ const homeDecoration = ref<HomeDecoration>({
   notices: [],
   brandContent: "",
   cards: [],
+  promoCards: [],
 });
 const selectedCard = ref<HomeCard>();
 const cardDrawerVisible = ref(false);
@@ -228,8 +225,8 @@ function markBannerFailed(id: string) {
   if (!failedBannerIds.value.includes(id)) failedBannerIds.value.push(id);
 }
 
-function openBanner(banner: HomeBanner) {
-  const linkUrl = banner.linkUrl?.trim();
+function openLink(url?: string | null) {
+  const linkUrl = url?.trim();
   if (!linkUrl) return;
   if (linkUrl.startsWith("/")) {
     navigate(linkUrl);

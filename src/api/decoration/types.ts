@@ -19,10 +19,16 @@ export interface HomeCard {
   content: string;
 }
 
+/** 首页四宫格活动卡片。 */
+export interface HomePromoCard extends Pick<HomeCard, "title" | "imageUrl"> {
+  linkUrl: string;
+}
+
 /** 首页装修聚合数据。 */
 export interface HomeDecoration {
   banners: HomeBanner[];
   notices: HomeNotice[];
   brandContent: string;
   cards: HomeCard[];
+  promoCards: HomePromoCard[];
 }

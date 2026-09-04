@@ -24,14 +24,6 @@ export interface QuickEntry {
   icon?: string;
 }
 
-/** 活动宫格卡片。 */
-export interface PromoCard {
-  title: string;
-  sub: string;
-  bg: string;
-  badge?: string;
-}
-
 /** 热榜商品。 */
 export interface HotProduct {
   rank: number;
@@ -102,30 +94,6 @@ export const newUserCoupon = {
   /** 距失效倒计时初始秒数（约 4.9 小时） */
   seconds: 17750,
 };
-
-export const promoCards: PromoCard[] = [
-  {
-    title: "L3 升级冲榜赛",
-    sub: "领升级好礼\n享高阶权益",
-    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-bg))",
-  },
-  {
-    title: "活动专区",
-    sub: "解锁变美礼遇",
-    bg: "linear-gradient(135deg, var(--yj-color-surface-warm), var(--yj-color-bg))",
-  },
-  {
-    title: "悦己医疗团队",
-    sub: "选择医生，选择安心",
-    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-bg))",
-    badge: "NEW",
-  },
-  {
-    title: "姐妹众测",
-    sub: "JOJO\n灵动胶原",
-    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-surface-warm))",
-  },
-];
 
 export const hotTabs: string[] = ["全部", "水光抗衰", "光电抗衰", "注射抗衰", "皮肤管理"];
 
