@@ -114,20 +114,52 @@
         <rich-text class="home-brand__body" :nodes="homeDecoration.brandContent" />
       </view>
 
-      <!-- 品牌区块 -->
-      <view
-        v-for="section in brandSections"
-        :key="section.title"
-        class="home-section home-brand-section"
-        :style="{ background: section.bg }"
-        @click="handleComingSoon"
+      <!-- 后台配置的首页卡片 -->
+      <button
+        v-for="(card, index) in homeDecoration.cards"
+        :key="index"
+        class="home-section home-content-card"
+        :aria-label="card.title"
+        @click="openCard(card)"
       >
-        <view class="home-brand-section__title">{{ section.title }}</view>
-        <view class="home-brand-section__sub">{{ section.sub }}</view>
-        <view class="home-brand-section__line" />
-        <view class="home-brand-section__button">了解详情</view>
-      </view>
+        <image
+          v-if="!failedCardIndexes.includes(index)"
+          class="home-content-card__image"
+          :src="card.imageUrl"
+          mode="aspectFill"
+          @error="failedCardIndexes.push(index)"
+        />
+        <view v-else class="home-content-card__placeholder"
+          ><wd-icon name="picture" size="48rpx"
+        /></view>
+      </button>
     </view>
+
+    <wd-popup
+      v-model="cardDrawerVisible"
+      position="bottom"
+      root-portal
+      safe-area-inset-bottom
+      :z-index="1100"
+      custom-style="border-radius: 28rpx 28rpx 0 0; overflow: hidden;"
+      @after-leave="selectedCard = undefined"
+    >
+      <view v-if="selectedCard" class="home-card-drawer">
+        <view class="home-card-drawer__header">
+          <text class="home-card-drawer__title">{{ selectedCard.title }}</text>
+          <button
+            class="home-card-drawer__close"
+            aria-label="关闭"
+            @click="cardDrawerVisible = false"
+          >
+            <wd-icon name="close" size="40rpx" />
+          </button>
+        </view>
+        <scroll-view class="home-card-drawer__scroll" scroll-y>
+          <rich-text class="home-card-drawer__content" :nodes="selectedCard.content" />
+        </scroll-view>
+      </view>
+    </wd-popup>
 
     <YjAppointmentDrawer
       v-model:visible="appointmentDrawerVisible"
@@ -138,15 +170,31 @@
 
 <script setup lang="ts">
 import { AppointmentTab, PRIMARY_APPOINTMENT_TABS } from "@/api/appointment";
-import DecorationAPI, { type HomeBanner, type HomeDecoration } from "@/api/decoration";
+import DecorationAPI, {
+  type HomeBanner,
+  type HomeCard,
+  type HomeDecoration,
+} from "@/api/decoration";
 import { RoutePath } from "@/constants";
-import { brandSections, newUserCoupon, promoCards, quickEntries } from "@/mocks/home";
+import { newUserCoupon, promoCards, quickEntries } from "@/mocks/home";
 import { useUserStore } from "@/stores/user";
 import { consumeTabBarParams, navigate } from "@/utils/navigate";
 
 const userStore = useUserStore();
 const heroIndex = ref(0);
-const homeDecoration = ref<HomeDecoration>({ banners: [], notices: [], brandContent: "" });
+const homeDecoration = ref<HomeDecoration>({
+  banners: [],
+  notices: [],
+  brandContent: "",
+  cards: [],
+});
+const selectedCard = ref<HomeCard>();
+const cardDrawerVisible = ref(false);
+const failedCardIndexes = ref<number[]>([]);
+function openCard(card: HomeCard) {
+  selectedCard.value = card;
+  cardDrawerVisible.value = true;
+}
 const failedBannerIds = ref<string[]>([]);
 const isDecorationLoading = ref(false);
 const decorationLoadError = ref("");
@@ -197,6 +245,7 @@ async function loadDecoration() {
   try {
     homeDecoration.value = await DecorationAPI.getHome();
     failedBannerIds.value = [];
+    failedCardIndexes.value = [];
     heroIndex.value = 0;
   } catch (error) {
     decorationLoadError.value = error instanceof Error ? error.message : "首页内容加载失败";
@@ -466,46 +515,82 @@ onPullDownRefresh(async () => {
   }
 }
 
-.home-brand-section {
-  position: relative;
+.home-content-card {
+  display: block;
+  width: 100%;
   height: 272rpx;
-  padding: 40rpx;
+  padding: 0;
   overflow: hidden;
-  border: 1rpx solid $color-line;
+  background-color: $color-primary-tint;
   border-radius: 32rpx;
+
+  &::after {
+    border: none;
+  }
+
+  &__image,
+  &__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: $color-text-placeholder;
+  }
 }
 
-.home-brand-section__title {
-  font-size: 48rpx;
-  font-weight: bold;
-  color: $color-primary-dark;
-}
+.home-card-drawer {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  background-color: $color-bg;
 
-.home-brand-section__sub {
-  margin-top: $spacing-xs;
-  font-size: $font-size-md;
-  line-height: 1.6;
-  color: $color-text-sub;
-  white-space: pre-line;
-}
+  &__header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: $spacing-md $page-padding;
+    border-bottom: 2rpx solid $color-line;
+  }
 
-.home-brand-section__line {
-  position: absolute;
-  bottom: 24rpx;
-  left: 40rpx;
-  width: 160rpx;
-  height: 4rpx;
-  background: linear-gradient(to right, $color-primary, transparent);
-}
+  &__title {
+    min-width: 0;
+    padding-top: $spacing-xs;
+    font-size: $font-size-lg;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
 
-.home-brand-section__button {
-  position: absolute;
-  right: 40rpx;
-  bottom: $spacing-md;
-  padding: 8rpx $spacing-md;
-  font-size: $font-size-xs;
-  color: $color-bg;
-  background-color: $color-primary;
-  border-radius: $radius-tag;
+  &__close {
+    flex-shrink: 0;
+    padding: $spacing-xs;
+    margin: 0 0 0 $spacing-sm;
+    line-height: 1;
+    background: transparent;
+
+    &::after {
+      border: none;
+    }
+  }
+
+  &__scroll {
+    flex: 1;
+    min-height: 0;
+  }
+
+  &__content {
+    display: block;
+    padding: $spacing-md $page-padding $spacing-lg;
+    overflow: hidden;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+
+    /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+    :deep(img) {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+  }
 }
 </style>

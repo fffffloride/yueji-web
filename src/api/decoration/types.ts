@@ -12,9 +12,17 @@ export interface HomeNotice {
   content: string;
 }
 
+/** 独立配置的首页卡片。 */
+export interface HomeCard {
+  title: string;
+  imageUrl: string;
+  content: string;
+}
+
 /** 首页装修聚合数据。 */
 export interface HomeDecoration {
   banners: HomeBanner[];
   notices: HomeNotice[];
   brandContent: string;
+  cards: HomeCard[];
 }

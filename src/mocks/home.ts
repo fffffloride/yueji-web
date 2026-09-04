@@ -47,13 +47,6 @@ export interface HotProduct {
   bg: string;
 }
 
-/** 品牌区块。 */
-export interface BrandSection {
-  title: string;
-  sub: string;
-  bg: string;
-}
-
 /** 附近门店。 */
 export interface NearbyStore {
   name: string;
@@ -177,34 +170,6 @@ export const nearbyStore: NearbyStore = {
   address: "苏州市工业园区中心广场北楼3楼（连廊口）",
   cityTag: "苏州市",
 };
-
-export const brandSections: BrandSection[] = [
-  {
-    title: "品牌起源",
-    sub: "关于悦己轻医美。",
-    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-bg))",
-  },
-  {
-    title: "合理定价",
-    sub: "好的医美，\n也可以有好的价格。",
-    bg: "linear-gradient(135deg, var(--yj-color-surface-warm), var(--yj-color-bg))",
-  },
-  {
-    title: "正品保障",
-    sub: "使用正品，我们的底线。",
-    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-bg))",
-  },
-  {
-    title: "医生团队",
-    sub: "相信他们，相信我们。",
-    bg: "linear-gradient(135deg, var(--yj-color-surface-warm), var(--yj-color-primary-tint))",
-  },
-  {
-    title: "安全保证",
-    sub: "不妥协，不冒进。",
-    bg: "linear-gradient(135deg, var(--yj-color-primary-tint), var(--yj-color-surface-warm))",
-  },
-];
 
 /** 品牌故事文案。 */
 export const brandStory = {
