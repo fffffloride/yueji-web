@@ -3,6 +3,11 @@
 
 // CSS 自定义属性，供页面/组件直接引用，也是运行时换肤的入口。
 // 只在这里声明一次，本文件仅由 App.vue 引入。
+// H5 的 root-portal 挂载到 body，需从文档根节点继承主题。
+
+/* #ifdef H5 */
+:root,
+/* #endif */
 page {
   --yj-color-primary: #{$color-primary};
   --yj-color-primary-dark: #{$color-primary-dark};
@@ -55,7 +60,9 @@ page {
   --wot-color-border-light: #{$color-line};
   --wot-color-bg: #{$color-bg-page};
   --wot-size-side-padding: #{$page-padding};
+}
 
+page {
   min-height: 100%;
   font-size: $font-size-md;
   color: $color-text-content;
